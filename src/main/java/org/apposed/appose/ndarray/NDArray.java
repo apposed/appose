@@ -12,6 +12,9 @@ package org.apposed.appose.ndarray;
  */
 public interface NDArray<T> extends Iterable<T> {
 
+	// Buffer protocol!
+	// https://peps.python.org/pep-3118/
+
 	long len();
 
 	/*
