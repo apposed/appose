@@ -46,7 +46,7 @@ in each implementation's README:
 
 A *worker* is a separate process created by Appose to do asynchronous
 computation on behalf of the calling process. The calling process interacts
-with a worker via its associated {@link Service}.
+with a worker via its associated *service*.
 
 Appose comes with built-in support for two worker implementations:
 `python_worker` to run Python scripts, and `GroovyWorker` to run Groovy
