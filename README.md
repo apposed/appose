@@ -89,4 +89,5 @@ A: Again, tempting! But nailing down (via either invention or reuse) a
    depend on Appose. Have you included the right plugins in your dependency
    set? Do they all have the right versions? Where is the bill of materials
    keeping all of the dependencies in sync? Etc. For now, Appose strives to
-   be self-contained with all supported types handled by one single library.
+   be self-contained with all supported types handled by one single library
+   per target language.
