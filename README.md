@@ -34,136 +34,13 @@ Separate processes, shared memory, minimal dependencies.
 
 ## Examples
 
-Here is a very simple example written in Python:
+Each supported language/platform has its own implementation of Appose.
+You can find examples for each language (calling out to other languages)
+in each implementation's README:
 
-```python
-import appose
-env = appose.java(vendor="zulu", version="17").build()
-with env.groovy() as groovy:
-    task = groovy.task("5 + 6")
-    task.waitFor()
-    result = task.outputs.get("result")
-    assert 11 == result
-```
-
-The same example, but written in Java and calling into Python:
-
-```java
-Environment env = Appose.conda("/path/to/environment.yml").build();
-try (Service python = env.python()) {
-    Task task = python.task("5 + 6");
-    task.waitFor();
-    Object result = task.outputs.get("result");
-    assertEquals(11, result);
-}
-```
-
-Here is a Python example using a few more of Appose's features:
-
-```python
-import appose
-from time import sleep
-
-golden_ratio_in_groovy = """
-// Approximate the golden ratio using the Fibonacci sequence.
-previous = 0
-current = 1
-for (i=0; i<iterations; i++) {
-    if (task.cancelRequested) {
-        task.cancel()
-        break
-    }
-    task.update(null, i, iterations)
-    v = current
-    current += previous
-    previous = v
-}
-task.outputs["numer"] = current
-task.outputs["denom"] = previous
-"""
-
-env = appose.java(vendor="zulu", version="17").build()
-with env.groovy() as groovy:
-    task = groovy.task(golden_ratio_in_groovy)
-
-    def task_listener(event):
-        match event.responseType:
-            case ResponseType.UPDATE:
-                print(f"Progress {task.current}/{task.maximum}")
-            case ResponseType.COMPLETION:
-                numer = task.outputs["numer"]
-                denom = task.outputs["denom"]
-                ratio = numer / denom
-                print(f"Task complete. Result: {numer}/{denom} =~ {ratio}");
-            case ResponseType.CANCELATION:
-                print("Task canceled")
-            case ResponseType.FAILURE:
-                print(f"Task failed: {task.error}")
-
-    task.listen(task_listener)
-
-    task.start()
-    sleep(1)
-    if not task.status.is_finished():
-        # Task is taking too long; request a cancelation.
-        task.cancel()
-
-    task.wait_for()
-```
-
-And the Java version:
-
-```java
-String goldenRatioInPython = """
-# Approximate the golden ratio using the Fibonacci sequence.
-previous = 0
-current = 1
-for i in range(iterations):
-    if task.cancel_requested:
-        task.cancel()
-        break
-    task.update(current=i, maximum=iterations)
-    v = current
-    current += previous
-    previous = v
-task.outputs["numer"] = current
-task.outputs["denom"] = previous
-""";
-
-Environment env = Appose.conda("/path/to/environment.yml").build();
-try (Service python = env.python()) {
-    Task task = python.task(goldenRatioInPython);
-    task.listen(event -> {
-        switch (event.responseType) {
-            case UPDATE:
-                System.out.println("Progress: " + task.current + "/" + task.maximum);
-                break;
-            case COMPLETION:
-                long numer = (Long) task.outputs.get("numer");
-                long denom = (Long) task.outputs.get("denom");
-                double ratio = (double) numer / denom;
-                System.out.println("Task complete. Result: " + numer + "/" + denom + " =~ " + ratio);
-                break;
-            case CANCELATION:
-                System.out.println("Task canceled");
-                break;
-            case FAILURE:
-                System.out.println("Task failed: " + task.error);
-                break;
-        }
-    });
-    task.start();
-    Thread.sleep(1000);
-    if (!task.status.isFinished()) {
-        // Task is taking too long; request a cancelation.
-        task.cancel();
-    }
-    task.waitFor();
-}
-```
-
-Of course, the above examples could have been done all in one language. But
-hopefully they hint at the possibilities of easy cross-language integration.
+* [Java](https://github.com/apposed/appose-java#examples)
+* [Python](https://github.com/apposed/appose-python#examples)
+* [JavaScript](https://github.com/apposed/appose-js#examples) (PLANNED)
 
 ## Workers
 
@@ -188,13 +65,6 @@ TODO - write up the request and response formats in detail here!
 JSON, one line per request/response.
 
 ## FAQ
-
-Q: Where is the code?
-
-A: There is an implementation of Appose for each supported language/platform:
-   [appose-java](https://github.com/appose/appose-java),
-   [appose-python](https://github.com/appose/appose-python),
-   and (planned) [appose-js](https://github.com/appose/appose-js).
 
 Q: How about abstracting the transport layer so protocols besides pipes+JSON
    can be used? Then Appose could work with pipes+pickle, and/or with Google
