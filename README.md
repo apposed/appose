@@ -91,3 +91,9 @@ A: Again, tempting! But nailing down (via either invention or reuse) a
    keeping all of the dependencies in sync? Etc. For now, Appose strives to
    be self-contained with all supported types handled by one single library
    per target language.
+
+## Alternatives and complements
+
+* [CuVec](https://github.com/AMYPAD/CuVec)
+* [Apache Arrow](https://arrow.apache.org/)
+* [NATS.io](https://nats.io/)
