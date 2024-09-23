@@ -61,8 +61,104 @@ But Appose is compatible with any program that abides by the
 2. The worker must issue responses in Appose's *response* format on its
    standard output (stdout) stream.
 
-TODO - write up the request and response formats in detail here!
-JSON, one line per request/response.
+### Requests to worker from service
+
+A *request* is a single line of JSON sent to the worker process via its
+standard input stream. It has a `task` key taking the form of a
+[UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier),
+and a `requestType` key with one of the following values:
+
+#### EXECUTE
+
+Asynchronously execute a script within the worker process. E.g.:
+```json
+{
+   "task" : "87427f91-d193-4b25-8d35-e1292a34b5c4",
+   "requestType" : "EXECUTE",
+   "script" : "task.outputs[\"result\"] = computeResult(gamma)\n",
+   "inputs" : {"gamma": 2.2}
+}
+```
+
+#### CANCEL
+
+Cancel a running script. E.g.:
+```json
+{
+   "task" : "87427f91-d193-4b25-8d35-e1292a34b5c4",
+   "requestType" : "CANCEL"
+}
+```
+
+### Responses from worker to service
+
+A *response* is a single line of JSON with a `task` key taking the
+form of a
+[UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier),
+and a `responseType` key with one of the following values:
+
+#### LAUNCH
+
+A LAUNCH response is issued to confirm the success of an EXECUTE
+request.
+```json
+{
+   "task" : "87427f91-d193-4b25-8d35-e1292a34b5c4",
+   "responseType" : "LAUNCH"
+}
+```
+
+#### UPDATE
+
+An UPDATE response is issued to convey that a task has somehow made
+progress. The UPDATE response typically comes bundled with a
+`message` string indicating what has changed, `current` and/or
+`maximum` progress indicators conveying the step the task has
+reached, or both.
+```json
+{
+   "task" : "87427f91-d193-4b25-8d35-e1292a34b5c4",
+   "responseType" : "UPDATE",
+   "message" : "Processing step 0 of 91",
+   "current" : 0,
+   "maximum" : 91
+}
+```
+
+#### COMPLETION
+
+A COMPLETION response is issued to convey that a task has successfully
+completed execution, as well as report the values of any task outputs.
+```json
+{
+   "task" : "87427f91-d193-4b25-8d35-e1292a34b5c4",
+   "responseType" : "COMPLETION",
+   "outputs" : {"result" : 91}
+}
+```
+
+#### CANCELATION
+
+A CANCELATION response is issued to confirm the success of a CANCEL
+request.
+```json
+{
+   "task" : "87427f91-d193-4b25-8d35-e1292a34b5c4",
+   "responseType" : "CANCELATION"
+}
+```
+
+#### FAILURE
+
+A FAILURE response is issued to convey that a task did not completely
+and successfully execute, such as an exception being raised.
+```json
+{
+   "task" : "87427f91-d193-4b25-8d35-e1292a34b5c4",
+   "responseType" : "FAILURE",
+   "error", "Invalid gamma value"}
+}
+```
 
 ## FAQ
 
