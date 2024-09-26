@@ -1,9 +1,5 @@
 # Appose
 
-***WARNING: Appose is currently in incubation.
-Not all features described below are functional.
-This document has some aspirational aspects!***
-
 Appose is a library for interprocess cooperation with shared memory.
 The guiding principles are *simplicity* and *efficiency*.
 
@@ -24,7 +20,7 @@ Separate processes, shared memory, minimal dependencies.
 1. Construct an environment. E.g.:
    * Java with dependencies from Maven.
    * Python with dependencies from conda-forge.
-   * JavaScript with dependencies from NPM.
+   * JavaScript/Node.js with dependencies from NPM (**planned**).
 
 2. Invoke routines in that environment:
    * Routines are run in a separate process.
@@ -40,7 +36,6 @@ in each implementation's README:
 
 * [Java](https://github.com/apposed/appose-java#examples)
 * [Python](https://github.com/apposed/appose-python#examples)
-* [JavaScript](https://github.com/apposed/appose-js#examples) (PLANNED)
 
 ## Workers
 
