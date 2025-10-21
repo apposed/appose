@@ -1,0 +1,16 @@
+[project]
+name = "appose"
+version = "0.3.0"
+description = "Appose - interprocess cooperation with shared memory"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[dependency-groups]
+# Local ReadTheDocs building
+docs = [
+    "myst-parser>=2.0.0",
+    "sphinx>=7.0.0",
+    "sphinx-copybutton>=0.5.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "sphinx-tabs>=3.4.0",
+]
