@@ -30,6 +30,9 @@ Separate processes, shared memory, minimal dependencies.
 
 ## Examples
 
+> [!NOTE]
+> **QUICK START:** [Appose Workshop](https://fiji.github.io/i2k-2025-appose/)
+
 Each supported language/platform has its own implementation of Appose.
 You can find examples for each language (calling out to other languages)
 in each implementation's README:
