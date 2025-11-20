@@ -1,5 +1,8 @@
 # Appose
 
+> [!NOTE]
+> **QUICK START:** [Appose Workshop](https://fiji.github.io/i2k-2025-appose/)
+
 Appose is a library for interprocess cooperation with shared memory.
 The guiding principles are *simplicity* and *efficiency*.
 
@@ -29,9 +32,6 @@ Separate processes, shared memory, minimal dependencies.
      for zero-copy access across processes.
 
 ## Examples
-
-> [!NOTE]
-> **QUICK START:** [Appose Workshop](https://fiji.github.io/i2k-2025-appose/)
 
 Each supported language/platform has its own implementation of Appose.
 You can find examples for each language (calling out to other languages)
