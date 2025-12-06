@@ -1,5 +1,342 @@
-<html>
-  <head>
-    <meta http-equiv="refresh" content="0;URL='https://docs.apposed.org/'" />
-  </head>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Appose: Interprocess cooperation with shared memory. Build environments, run scripts, share data across languages.">
+  <meta name="author" content="The Appose Team">
+
+  <title>Appose: Interprocess Cooperation with Shared Memory</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+
+  <!-- Font Awesome -->
+  <script defer src="https://use.fontawesome.com/releases/v6.7.2/js/solid.js"
+    integrity="sha384-Jx4lvM3f1foL3gcKtEZPpp/IOxYaIOJ+KQRq3vP7Towpgy4bjb6wo5QK5VRtnpLh" crossorigin="anonymous">
+  </script>
+  <script defer src="https://use.fontawesome.com/releases/v6.7.2/js/fontawesome.js"
+    integrity="sha384-dCcP+1ToHaZKWNvVqy4+4ekZYXP73UfD3KsBQ0xg54c0+R0I6zsewwjQiM3JUwg+" crossorigin="anonymous">
+  </script>
+
+  <style>
+    body {
+      padding-top: 56px;
+    }
+
+    .navbar {
+      background-color: #2c3e50;
+    }
+
+    .hero-section {
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      color: white;
+      padding: 60px 0;
+    }
+
+    .hero-section h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .hero-section p {
+      font-size: 1.25rem;
+      margin-bottom: 30px;
+      opacity: 0.95;
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      color: #3498db;
+    }
+
+    .feature-card {
+      padding: 30px 20px;
+      text-align: center;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .feature-card h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .feature-card p {
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .features-section {
+      padding: 60px 0;
+      background-color: #f8f9fa;
+    }
+
+    .features-section h2 {
+      text-align: center;
+      margin-bottom: 50px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .cta-buttons {
+      margin-top: 30px;
+    }
+
+    .cta-buttons .btn {
+      margin-right: 10px;
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+      padding: 10px 25px;
+    }
+
+    .info-section {
+      padding: 60px 0;
+      background-color: white;
+    }
+
+    .info-section h2 {
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 25px;
+    }
+
+    .footer {
+      background-color: #2c3e50;
+      color: white;
+      padding: 40px 0;
+      margin-top: 60px;
+    }
+
+    .footer a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .highlight-text {
+      color: #3498db;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body role="document">
+  <!-- Fixed navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top" role="navigation">
+    <div class="container">
+      <a class="navbar-brand" href="/" style="font-weight: 700; font-size: 1.3rem;">
+        Appose
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="https://docs.apposed.org/">Documentation</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://github.com/apposed/appose">GitHub</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://github.com/apposed/appose/issues">Issues</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero section -->
+  <div class="hero-section">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <h1>Appose</h1>
+          <p class="lead">
+            Interprocess cooperation with shared memory.<br>Build environments, run scripts, share data across Java, Python and more.
+          </p>
+          <div class="cta-buttons">
+            <a href="https://docs.apposed.org/" class="btn btn-primary btn-lg">
+              <span class="fas fa-book"></span> Documentation
+            </a>
+            <a href="https://github.com/apposed/appose" class="btn btn-outline-light btn-lg">
+              <span class="fab fa-github"></span> View on GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main features section -->
+  <div class="features-section">
+    <div class="container">
+      <div class="row">
+        <!-- Feature 1: Build Environments -->
+        <div class="col-12 col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="fas fa-hammer"></span>
+            </div>
+            <h3>Build Environments</h3>
+            <p>
+              Dynamically construct isolated environments with dependencies from conda-forge, PyPI, Maven, and more. No manual setup needed.
+            </p>
+          </div>
+        </div>
+        <!-- Feature 2: Run Scripts -->
+        <div class="col-12 col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="fas fa-code"></span>
+            </div>
+            <h3>Run Scripts</h3>
+            <p>
+              Execute code asynchronously in separate processes. Scripts receive inputs and return outputs via a simple stdio-based protocol.
+            </p>
+          </div>
+        </div>
+        <!-- Feature 3: Share Memory -->
+        <div class="col-12 col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <span class="fas fa-microchip"></span>
+            </div>
+            <h3>Share Memory</h3>
+            <p>
+              Zero-copy access to large data structures via shared memory buffers. Perfect for tensor and array operations across processes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key use cases and info -->
+  <div class="info-section">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-6">
+          <h2>Why Appose?</h2>
+          <p>
+            Appose was built to enable <span class="highlight-text">easy execution of Python-based deep learning from Java without copying tensors</span>. But its utility extends far beyond that.
+          </p>
+          <p>
+            The problem: You need to use code written in another language (Python for ML, Java for image processing, Node.js for web services), but copying large arrays between processes is slow and memory-intensive.
+          </p>
+          <p>
+            The solution: Appose lets multiple language runtimes cooperate seamlessly with zero-copy shared memory access. Build an environment with the dependencies you need, spawn workers, and execute routines with minimal overhead.
+          </p>
+          <p>
+            <strong>Guiding principles:</strong> Simplicity and efficiency.
+          </p>
+        </div>
+        <div class="col-lg-6">
+          <h2>Quick Start</h2>
+          <p>
+            The basic workflow is simple:
+          </p>
+          <ol>
+            <li><strong>Build an Environment</strong> with your dependencies</li>
+            <li><strong>Create a Service</strong> connected to a worker process</li>
+            <li><strong>Execute Scripts</strong> on the worker by launching Tasks</li>
+            <li><strong>Receive Results</strong> asynchronously with progress updates</li>
+          </ol>
+          <p>
+            <a href="https://fiji.github.io/i2k-2025-appose/" class="btn btn-primary">
+              <span class="fas fa-graduation-cap"></span> Appose Workshop
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Implementations section -->
+  <div class="info-section" style="background-color: #f8f9fa;">
+    <div class="container">
+      <h2>Language Implementations</h2>
+      <p class="mb-4">
+        Appose is designed so that each language has its own implementation, all speaking the same JSON protocol. This keeps each library lightweight and simple.
+      </p>
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><span class="fab fa-java"></span> Java</h5>
+              <p class="card-text">Use Python deep learning models from your Java code. Build Maven-based environments.</p>
+              <a href="https://github.com/apposed/appose-java" class="btn btn-sm btn-primary">Learn More</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><span class="fab fa-python"></span> Python</h5>
+              <p class="card-text">Call Java code or Node.js functions from Python. Build Python and conda environments.</p>
+              <a href="https://github.com/apposed/appose-python" class="btn btn-sm btn-primary">Learn More</a>
+            </div>
+          </div>
+        </div>
+        <!--
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><span class="fab fa-js"></span> JavaScript</h5>
+              <p class="card-text">Maybe someday: Node.js implementation. Interop with Java and Python workers.</p>
+              <a href="https://github.com/apposed/appose" class="btn btn-sm btn-secondary" disabled>Coming Soon</a>
+            </div>
+          </div>
+        </div>
+        -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h5>Appose</h5>
+          <p>
+            Interprocess cooperation with shared memory.
+          </p>
+          <p>
+            <a href="https://github.com/apposed">GitHub</a> •
+            <a href="https://github.com/apposed/appose/issues">Issues</a> •
+            <a href="https://docs.apposed.org/">Documentation</a>
+          </p>
+        </div>
+        <div class="col-md-6">
+          <h5>Related Projects</h5>
+          <ul style="list-style: none; padding: 0;">
+            <li><a href="https://github.com/apposed/jgo">jgo</a> - Launcher and dependency manager for Java programs</li>
+            <li><a href="https://github.com/apposed/jaunch">Jaunch</a> - Native launcher for Java and Python applications</li>
+          </ul>
+        </div>
+      </div>
+      <hr style="border-color: #555;">
+      <p class="text-center mb-0">
+        Appose is open source, licensed under <a href="LICENSE">Apache 2.0</a>.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+</body>
+
 </html>
