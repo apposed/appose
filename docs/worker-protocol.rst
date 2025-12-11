@@ -337,7 +337,7 @@ To create a custom worker:
 Minimal Worker Example
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Here's a minimal worker in Python:
+Here's a minimal (single-threaded) worker in Python:
 
 .. code-block:: python
 
@@ -390,6 +390,7 @@ Here's a minimal worker in Python:
 
        elif request_type == "CANCEL":
            # Send CANCELATION
+           # Note: Single-threaded worker cannot actually honor task cancelations.
            print(json.dumps({"task": task_id, "responseType": "CANCELATION"}))
            sys.stdout.flush()
 
