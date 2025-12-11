@@ -182,7 +182,7 @@ Use listeners to monitor progress and support cancelation:
 Can I run multiple tasks in parallel?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Yes, create multiple tasks and they will run concurrently (depending on worker implementation):
+Yes, create multiple tasks and they will run concurrently:
 
 .. tabs::
 
@@ -210,10 +210,6 @@ Yes, create multiple tasks and they will run concurrently (depending on worker i
              # Both run concurrently
              task1.wait_for()
              task2.wait_for()
-
-.. note::
-
-   The Python worker supports concurrent tasks via threading. The Groovy worker is currently single-threaded.
 
 How do I handle errors in tasks?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

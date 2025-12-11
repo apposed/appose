@@ -318,7 +318,7 @@ The ``GroovyWorker`` class implements the protocol in Groovy/Java. Key features:
 
 * Executes Groovy scripts using ``GroovyShell``
 * Provides a ``task`` object with ``inputs``, ``outputs``, ``cancelRequested``
-* Single-threaded execution model
+* Handles multiple concurrent tasks via threading
 * Source: https://github.com/apposed/appose-java
 
 Creating Custom Workers
