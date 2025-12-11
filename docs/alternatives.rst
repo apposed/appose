@@ -243,7 +243,9 @@ Containerization tools for application packaging and deployment.
 * Ensure consistent environments across deployments
 * Combine with Appose for multi-language workflows in containers
 
-**Note:** Shared memory requires special configuration in Docker (``--ipc=host`` or shared memory volumes).
+.. todo:: Verify correctness of the following Docker information. And if true, provide more detail.
+
+.. note:: Shared memory requires special configuration in Docker (``--ipc=host`` or shared memory volumes).
 
 Comparison Matrix
 -----------------

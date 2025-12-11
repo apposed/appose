@@ -20,6 +20,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
     'sphinx_tabs.tabs',
     'sphinx_copybutton',
     'myst_parser',
@@ -56,6 +57,9 @@ html_theme_options = {
 # sphinx-tabs configuration
 sphinx_tabs_valid_builders = ['html', 'linkcheck']
 sphinx_tabs_disable_tab_closing = True
+
+# Todo extension configuration
+todo_include_todos = True
 
 # Napoleon settings for Google/NumPy style docstrings
 napoleon_google_docstring = True

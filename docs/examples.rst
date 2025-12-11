@@ -552,6 +552,8 @@ Multiple Tasks in Sequence
 
 Running multiple tasks one after another.
 
+.. todo:: Running tasks in sequence is not very "Advanced". More appropriate would be things like: 1) open-ended tasks that send updates for communication back to the service process; or 2) use of the queue=main feature to run sensitive tasks on the main thread to avoid threading issues.
+
 .. tabs::
 
    .. tab:: Java
@@ -613,6 +615,8 @@ Error Handling
 ^^^^^^^^^^^^^^
 
 Properly handling task failures.
+
+.. todo:: The following example will throw an exception at the task.waitFor() step. This example needs to be changed to either: A) try/catch at that step and handle that way; or B) do not call waitFor and instead handle errors asynchronously by checking task.status at intervals; or C) maybe one example of each?
 
 .. tabs::
 
@@ -683,6 +687,8 @@ Real-World Use Cases
 
 Deep Learning Inference
 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. todo:: This example needs to be finished. We can use https://github.com/ctrueden/starfun3d
 
 Running deep learning models from a different language.
 
@@ -760,6 +766,8 @@ Running deep learning models from a different language.
 
 Data Science Pipeline
 ^^^^^^^^^^^^^^^^^^^^^
+
+.. todo:: This example needs testing and refinement.
 
 Complex data processing workflow.
 
