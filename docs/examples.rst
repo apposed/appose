@@ -380,10 +380,10 @@ Using Pixi for a modern, faster alternative to conda.
              print(f"Slope: {task.outputs['slope']}")
              print(f"Intercept: {task.outputs['intercept']}")
 
-UV Environment
+uv Environment
 ^^^^^^^^^^^^^^
 
-Using UV for fast Python virtual environments.
+Using uv for fast Python virtual environments.
 
 .. tabs::
 

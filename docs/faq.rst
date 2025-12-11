@@ -25,7 +25,7 @@ Why use Appose instead of other IPC solutions?
 Appose is designed to be simpler than alternatives like Apache Arrow, Google Protocol Buffers, or NATS.io, while still supporting:
 
 * **Zero-copy data sharing** via shared memory for large tensors
-* **Dynamic environment construction** with conda, pixi, or UV
+* **Dynamic environment construction** with conda, pixi, or uv
 * **Minimal dependencies** - one self-contained library per language
 * **Simple JSON-based protocol** for easy debugging and custom workers
 
@@ -96,7 +96,7 @@ Which environment builder should I use?
 
 * **Pixi** (recommended) - Modern, fast, supports both conda and PyPI packages
 * **Mamba/Conda** - Traditional conda environments, widely compatible
-* **UV** - Fast Python virtual environments, PyPI packages only
+* **uv** - Fast Python virtual environments, PyPI packages only
 * **System** - Use existing system installations, no environment management
 
 For most new projects, **Pixi is recommended** due to its speed and flexibility.

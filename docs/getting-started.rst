@@ -233,7 +233,7 @@ Instead of using the system environment, you can build isolated environments wit
          Environment env = Appose.mamba("environment.yml")
              .build();
 
-      **Using UV** (Python virtual environments):
+      **Using uv** (Python virtual environments):
 
       .. code-block:: java
 
@@ -260,7 +260,7 @@ Instead of using the system environment, you can build isolated environments wit
 
          env = appose.mamba("environment.yml").build()
 
-      **Using UV** (Python virtual environments):
+      **Using uv** (Python virtual environments):
 
       .. code-block:: python
 

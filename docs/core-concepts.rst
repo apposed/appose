@@ -81,7 +81,7 @@ Builder Types
             env = appose.mamba("environment.yml").build()
 
 **UvBuilder**
-   Fast Python virtual environments via UV.
+   Fast Python virtual environments via uv.
 
    .. tabs::
 

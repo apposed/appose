@@ -33,7 +33,7 @@ Apache Arrow is a development platform for in-memory analytics. It provides:
 **When to use Appose instead:**
 
 * You want simpler setup with minimal dependencies
-* You need dynamic environment management (conda/pixi/UV)
+* You need dynamic environment management (conda/pixi/uv)
 * You're primarily doing local IPC
 * You prefer JSON-based protocols for simplicity
 
@@ -174,12 +174,12 @@ Appose **integrates with** these environment managers to build isolated environm
 
 Appose handles the IPC and shared memory, while these tools handle dependency management and environment isolation.
 
-UV
+uv
 ^^
 
 **Website:** https://github.com/astral-sh/uv
 
-UV is a fast Python package installer and resolver.
+uv is a fast Python package installer and resolver.
 
 **How Appose uses it:**
 
@@ -189,7 +189,7 @@ UV is a fast Python package installer and resolver.
 
 **Why this complements Appose:**
 
-UV provides fast Python environment setup, while Appose handles cross-language communication.
+uv provides fast Python environment setup, while Appose handles cross-language communication.
 
 NumPy/PyTorch/TensorFlow
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -341,6 +341,6 @@ Yes! These tools can complement each other:
 * **Appose + Arrow**: Use Appose for local execution, Arrow for cross-machine data transfer
 * **Appose + NATS**: Use Appose for compute-heavy workers, NATS for coordination/messaging
 * **Appose + Docker**: Package Appose workers in containers for deployment
-* **Appose + Conda/UV**: Already integrated for environment management
+* **Appose + Conda/uv**: Already integrated for environment management
 
 The best tool depends on your specific requirements. Appose focuses on making local interprocess cooperation simple and efficient.
