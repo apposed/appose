@@ -420,10 +420,6 @@ Appose uses JSON for serialization, which supports:
 
 For complex types (like tensors), use **shared memory** with NDArrays. The shared memory name is passed as a string in inputs/outputs, and both sides can access the data without copying.
 
-.. note::
-
-   Shared memory support is currently being enhanced. Check your language implementation's documentation for current capabilities.
-
 Testing Your Worker
 -------------------
 
@@ -432,7 +428,7 @@ To test a custom worker:
 1. **Run the worker manually** and send it JSON requests via stdin
 2. **Verify responses** match the expected format
 3. **Test error cases** (invalid script, cancelation, etc.)
-4. **Integrate with Appose** using ``env.service("your-worker", ...)``
+4. **Integrate with Appose** using ``env.service("my-worker", ...)``
 
 Example manual test:
 
