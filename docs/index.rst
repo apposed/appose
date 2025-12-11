@@ -26,18 +26,6 @@ Quick Example
 
 .. tabs::
 
-   .. tab:: Java
-
-      .. code-block:: java
-
-         Environment env = Appose.system();
-         try (Service python = env.python()) {
-             Task task = python.task("5 + 6");
-             task.waitFor();
-             Object result = task.outputs.get("result");
-             // result == 11
-         }
-
    .. tab:: Python
 
       .. code-block:: python
@@ -49,6 +37,18 @@ Quick Example
              task.wait_for()
              result = task.outputs["result"]
              # result == 11
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         Environment env = Appose.system();
+         try (Service python = env.python()) {
+             Task task = python.task("5 + 6");
+             task.waitFor();
+             Object result = task.outputs.get("result");
+             // result == 11
+         }
 
 How Appose Works
 ----------------

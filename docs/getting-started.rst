@@ -8,6 +8,39 @@ Installation
 
 .. tabs::
 
+   .. tab:: Python
+
+      **PyPI/Pip**
+
+      Add ``appose`` to your project dependencies in ``pyproject.toml``:
+
+      .. code-block:: toml
+
+         dependencies = [
+           "appose"
+         ]
+
+      Or install directly:
+
+      .. code-block:: bash
+
+         pip install appose
+
+      **Conda/Mamba**
+
+      Add ``appose`` to your ``environment.yml``:
+
+      .. code-block:: yaml
+
+         dependencies:
+           - appose
+
+      Or install directly:
+
+      .. code-block:: bash
+
+         conda install -c conda-forge appose
+
    .. tab:: Java
 
       **Maven**
@@ -52,43 +85,17 @@ Installation
       * ``target/appose-<version>.jar``
       * ``target/dependency/*.jar``
 
-   .. tab:: Python
-
-      **PyPI/Pip**
-
-      Add ``appose`` to your project dependencies in ``pyproject.toml``:
-
-      .. code-block:: toml
-
-         dependencies = [
-           "appose"
-         ]
-
-      Or install directly:
-
-      .. code-block:: bash
-
-         pip install appose
-
-      **Conda/Mamba**
-
-      Add ``appose`` to your ``environment.yml``:
-
-      .. code-block:: yaml
-
-         dependencies:
-           - appose
-
-      Or install directly:
-
-      .. code-block:: bash
-
-         conda install -c conda-forge appose
-
 Prerequisites
 -------------
 
 .. tabs::
+
+   .. tab:: Python
+
+      To use Appose from Python, you need:
+
+      * **Python 3.10 or higher**
+      * **Java 8+** (if calling Java/Groovy workers)
 
    .. tab:: Java
 
@@ -103,19 +110,40 @@ Prerequisites
 
          python -c 'import appose'
 
-   .. tab:: Python
-
-      To use Appose from Python, you need:
-
-      * **Python 3.10 or higher**
-      * **Java 8+** (if calling Java/Groovy workers)
-
 Your First Appose Program
 --------------------------
 
 Let's create a simple program that demonstrates Appose's basic functionality.
 
 .. tabs::
+
+   .. tab:: Python
+
+      Create a file ``hello_appose.py``:
+
+      .. code-block:: python
+
+         import appose
+
+         # Create an environment using the system Java
+         env = appose.system()
+
+         # Launch a Groovy worker service
+         with env.groovy() as groovy:
+             # Execute a simple calculation
+             task = groovy.task("5 + 6")
+             task.wait_for()
+
+             # Get the result
+             result = task.outputs["result"]
+             print(f"Result: {result}")
+             # Output: Result: 11
+
+      Run it:
+
+      .. code-block:: bash
+
+         python hello_appose.py
 
    .. tab:: Java
 
@@ -154,34 +182,6 @@ Let's create a simple program that demonstrates Appose's basic functionality.
          javac -cp "appose-0.3.0.jar:dependency/*" HelloAppose.java
          java -cp ".:appose-0.3.0.jar:dependency/*" HelloAppose
 
-   .. tab:: Python
-
-      Create a file ``hello_appose.py``:
-
-      .. code-block:: python
-
-         import appose
-
-         # Create an environment using the system Java
-         env = appose.system()
-
-         # Launch a Groovy worker service
-         with env.groovy() as groovy:
-             # Execute a simple calculation
-             task = groovy.task("5 + 6")
-             task.wait_for()
-
-             # Get the result
-             result = task.outputs["result"]
-             print(f"Result: {result}")
-             # Output: Result: 11
-
-      Run it:
-
-      .. code-block:: bash
-
-         python hello_appose.py
-
 Understanding the Code
 -----------------------
 
@@ -214,6 +214,33 @@ Instead of using the system environment, you can build isolated environments wit
 
 .. tabs::
 
+   .. tab:: Python
+
+      **Using Pixi** (recommended):
+
+      .. code-block:: python
+
+         env = appose.pixi() \
+             .conda("python>=3.10", "numpy", "pandas") \
+             .pypi("scikit-learn") \
+             .channels("conda-forge") \
+             .build("my-ml-env")
+
+      **Using Conda/Mamba**:
+
+      .. code-block:: python
+
+         env = appose.mamba("environment.yml").build()
+
+      **Using uv** (Python virtual environments):
+
+      .. code-block:: python
+
+         env = appose.uv() \
+             .python("3.11") \
+             .include("numpy", "pandas", "matplotlib") \
+             .build("my-env")
+
    .. tab:: Java
 
       **Using Pixi** (recommended):
@@ -241,32 +268,5 @@ Instead of using the system environment, you can build isolated environments wit
              .python("3.11")
              .include("numpy", "pandas", "matplotlib")
              .build("my-env");
-
-   .. tab:: Python
-
-      **Using Pixi** (recommended):
-
-      .. code-block:: python
-
-         env = appose.pixi() \
-             .conda("python>=3.10", "numpy", "pandas") \
-             .pypi("scikit-learn") \
-             .channels("conda-forge") \
-             .build("my-ml-env")
-
-      **Using Conda/Mamba**:
-
-      .. code-block:: python
-
-         env = appose.mamba("environment.yml").build()
-
-      **Using uv** (Python virtual environments):
-
-      .. code-block:: python
-
-         env = appose.uv() \
-             .python("3.11") \
-             .include("numpy", "pandas", "matplotlib") \
-             .build("my-env")
 
 Environments are cached by default in ``~/.local/share/appose/<env-name>``, so they only need to be built once.

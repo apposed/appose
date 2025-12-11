@@ -111,15 +111,6 @@ Use the ``inputs`` and ``outputs`` maps:
 
 .. tabs::
 
-   .. tab:: Java
-
-      .. code-block:: java
-
-         Task task = python.task("result = x * 2");
-         task.inputs.put("x", 42);
-         task.waitFor();
-         Object result = task.outputs.get("result"); // 84
-
    .. tab:: Python
 
       .. code-block:: python
@@ -129,6 +120,15 @@ Use the ``inputs`` and ``outputs`` maps:
          task.wait_for()
          result = task.outputs["result"]  # 84
 
+   .. tab:: Java
+
+      .. code-block:: java
+
+         Task task = python.task("result = x * 2");
+         task.inputs.put("x", 42);
+         task.waitFor();
+         Object result = task.outputs.get("result"); // 84
+
 For large arrays/tensors, use **shared memory** to avoid copying (see worker implementation docs).
 
 How do I handle long-running tasks?
@@ -137,6 +137,25 @@ How do I handle long-running tasks?
 Use listeners to monitor progress and support cancelation:
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         from appose import ResponseType
+
+         def listener(event):
+             if event.response_type == ResponseType.UPDATE:
+                 print(f"Progress: {task.current}/{task.maximum}")
+             elif event.response_type == ResponseType.COMPLETION:
+                 print("Done!")
+
+         task = python.task(long_script)
+         task.listen(listener)
+
+         # Later, if needed:
+         if not task.status.is_finished():
+             task.cancel()
 
    .. tab:: Java
 
@@ -160,31 +179,24 @@ Use listeners to monitor progress and support cancelation:
              task.cancel();
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         from appose import ResponseType
-
-         def listener(event):
-             if event.response_type == ResponseType.UPDATE:
-                 print(f"Progress: {task.current}/{task.maximum}")
-             elif event.response_type == ResponseType.COMPLETION:
-                 print("Done!")
-
-         task = python.task(long_script)
-         task.listen(listener)
-
-         # Later, if needed:
-         if not task.status.is_finished():
-             task.cancel()
-
 Can I run multiple tasks in parallel?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Yes, create multiple tasks and they will run concurrently:
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         with env.python() as python:
+             task1 = python.task("import time; time.sleep(1)")
+             task2 = python.task("import time; time.sleep(1)")
+
+             # Both run concurrently
+             task1.wait_for()
+             task2.wait_for()
 
    .. tab:: Java
 
@@ -199,24 +211,23 @@ Yes, create multiple tasks and they will run concurrently:
              task2.waitFor();
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         with env.python() as python:
-             task1 = python.task("import time; time.sleep(1)")
-             task2 = python.task("import time; time.sleep(1)")
-
-             # Both run concurrently
-             task1.wait_for()
-             task2.wait_for()
-
 How do I handle errors in tasks?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Check the task status and error message:
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         task = python.task("result = 1 / 0")  # Will fail
+         task.wait_for()
+
+         if task.status == TaskStatus.FAILED:
+             print(f"Error: {task.error}", file=sys.stderr)
+             # Handle the error
 
    .. tab:: Java
 
@@ -230,17 +241,6 @@ Check the task status and error message:
              // Handle the error
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         task = python.task("result = 1 / 0")  # Will fail
-         task.wait_for()
-
-         if task.status == TaskStatus.FAILED:
-             print(f"Error: {task.error}", file=sys.stderr)
-             # Handle the error
-
 Advanced Questions
 ------------------
 
@@ -253,17 +253,17 @@ To use a custom worker:
 
 .. tabs::
 
-   .. tab:: Java
-
-      .. code-block:: java
-
-         Service custom = env.service("my-worker", "arg1", "arg2");
-
    .. tab:: Python
 
       .. code-block:: python
 
          custom = env.service("my-worker", "arg1", "arg2")
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         Service custom = env.service("my-worker", "arg1", "arg2");
 
 Can I use other transport layers besides pipes+JSON?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -306,15 +306,6 @@ Try enabling debug output to see what's happening:
 
 .. tabs::
 
-   .. tab:: Java
-
-      .. code-block:: java
-
-         Environment env = Appose.pixi()
-             .conda("python>=3.10")
-             .logDebug()  // This logs build output to stderr
-             .build("my-env");
-
    .. tab:: Python
 
       .. code-block:: python
@@ -323,6 +314,15 @@ Try enabling debug output to see what's happening:
              .conda("python>=3.10") \
              .log_debug()  # This logs build output
              .build("my-env")
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         Environment env = Appose.pixi()
+             .conda("python>=3.10")
+             .logDebug()  // This logs build output to stderr
+             .build("my-env");
 
 If the build is truly stuck, check:
 

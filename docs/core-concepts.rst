@@ -42,16 +42,6 @@ Builder Types
 
    .. tabs::
 
-      .. tab:: Java
-
-         .. code-block:: java
-
-            Environment env = Appose.pixi()
-                .conda("python>=3.10", "numpy")
-                .pypi("cowsay")
-                .channels("conda-forge")
-                .build("my-env");
-
       .. tab:: Python
 
          .. code-block:: python
@@ -62,10 +52,26 @@ Builder Types
                 .channels("conda-forge") \
                 .build("my-env")
 
+      .. tab:: Java
+
+         .. code-block:: java
+
+            Environment env = Appose.pixi()
+                .conda("python>=3.10", "numpy")
+                .pypi("cowsay")
+                .channels("conda-forge")
+                .build("my-env");
+
 **MambaBuilder**
    Traditional conda environments via micromamba.
 
    .. tabs::
+
+      .. tab:: Python
+
+         .. code-block:: python
+
+            env = appose.mamba("environment.yml").build()
 
       .. tab:: Java
 
@@ -74,25 +80,10 @@ Builder Types
             Environment env = Appose.mamba("environment.yml")
                 .build();
 
-      .. tab:: Python
-
-         .. code-block:: python
-
-            env = appose.mamba("environment.yml").build()
-
 **UvBuilder**
    Fast Python virtual environments via uv.
 
    .. tabs::
-
-      .. tab:: Java
-
-         .. code-block:: java
-
-            Environment env = Appose.uv()
-                .python("3.11")
-                .include("numpy", "pandas")
-                .build("my-env");
 
       .. tab:: Python
 
@@ -103,16 +94,19 @@ Builder Types
                 .include("numpy", "pandas") \
                 .build("my-env")
 
-**SystemBuilder**
-   Uses system PATH without installing packages.
-
-   .. tabs::
-
       .. tab:: Java
 
          .. code-block:: java
 
-            Environment env = Appose.system();
+            Environment env = Appose.uv()
+                .python("3.11")
+                .include("numpy", "pandas")
+                .build("my-env");
+
+**SystemBuilder**
+   Uses system PATH without installing packages.
+
+   .. tabs::
 
       .. tab:: Python
 
@@ -120,31 +114,18 @@ Builder Types
 
             env = appose.system()
 
+      .. tab:: Java
+
+         .. code-block:: java
+
+            Environment env = Appose.system();
+
 Builder Features
 ^^^^^^^^^^^^^^^^
 
 All builders support monitoring build progress:
 
 .. tabs::
-
-   .. tab:: Java
-
-      .. code-block:: java
-
-         Environment env = Appose.pixi()
-             .conda("python>=3.10", "numpy")
-             .subscribeProgress(progress -> {
-                 System.out.println("Progress: " + progress.current + "/" + progress.total);
-             })
-             .subscribeOutput(line -> System.out.println("Output: " + line))
-             .subscribeError(line -> System.err.println("Error: " + line))
-             .build("my-env");
-
-         // Or simply log everything to stderr:
-         Environment env = Appose.pixi()
-             .conda("python>=3.10", "numpy")
-             .logDebug()
-             .build("my-env");
 
    .. tab:: Python
 
@@ -166,6 +147,25 @@ All builders support monitoring build progress:
              .log_debug() \
              .build("my-env")
 
+   .. tab:: Java
+
+      .. code-block:: java
+
+         Environment env = Appose.pixi()
+             .conda("python>=3.10", "numpy")
+             .subscribeProgress(progress -> {
+                 System.out.println("Progress: " + progress.current + "/" + progress.total);
+             })
+             .subscribeOutput(line -> System.out.println("Output: " + line))
+             .subscribeError(line -> System.err.println("Error: " + line))
+             .build("my-env");
+
+         // Or simply log everything to stderr:
+         Environment env = Appose.pixi()
+             .conda("python>=3.10", "numpy")
+             .logDebug()
+             .build("my-env");
+
 Environment
 -----------
 
@@ -181,24 +181,6 @@ Creating Workers
 Environments provide methods to create worker services:
 
 .. tabs::
-
-   .. tab:: Java
-
-      .. code-block:: java
-
-         Environment env = Appose.system();
-
-         // Create a Python worker
-         Service python = env.python();
-
-         // Create a Groovy worker
-         Service groovy = env.groovy();
-
-         // Create a Java worker
-         Service java = env.java();
-
-         // Create a custom worker
-         Service custom = env.service("my-worker", "arg1", "arg2");
 
    .. tab:: Python
 
@@ -218,6 +200,24 @@ Environments provide methods to create worker services:
          # Create a custom worker
          custom = env.service("my-worker", "arg1", "arg2")
 
+   .. tab:: Java
+
+      .. code-block:: java
+
+         Environment env = Appose.system();
+
+         // Create a Python worker
+         Service python = env.python();
+
+         // Create a Groovy worker
+         Service groovy = env.groovy();
+
+         // Create a Java worker
+         Service java = env.java();
+
+         // Create a custom worker
+         Service custom = env.service("my-worker", "arg1", "arg2");
+
 Service
 -------
 
@@ -229,6 +229,22 @@ Service Lifecycle
 Services should be properly closed when done to clean up resources:
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         # Using context manager (recommended)
+         with env.python() as python:
+             # Use the service
+         # Automatically closed
+
+         # Manual management
+         python = env.python()
+         try:
+             # Use the service
+         finally:
+             python.close()
 
    .. tab:: Java
 
@@ -247,28 +263,19 @@ Services should be properly closed when done to clean up resources:
              python.close();
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         # Using context manager (recommended)
-         with env.python() as python:
-             # Use the service
-         # Automatically closed
-
-         # Manual management
-         python = env.python()
-         try:
-             # Use the service
-         finally:
-             python.close()
-
 Creating Tasks
 ^^^^^^^^^^^^^^
 
 Services create tasks to execute scripts:
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         with env.python() as python:
+             task = python.task("result = 5 + 6")
 
    .. tab:: Java
 
@@ -277,13 +284,6 @@ Services create tasks to execute scripts:
          try (Service python = env.python()) {
              Task task = python.task("result = 5 + 6");
          }
-
-   .. tab:: Python
-
-      .. code-block:: python
-
-         with env.python() as python:
-             task = python.task("result = 5 + 6")
 
 Task
 ----
@@ -318,20 +318,6 @@ There are two ways to execute tasks:
 
 .. tabs::
 
-   .. tab:: Java
-
-      .. code-block:: java
-
-         // 1. Fire and forget (starts immediately)
-         Task task = python.task(script);
-         task.waitFor();
-
-         // 2. Deferred execution (start manually)
-         Task task = python.task(script);
-         // ... do other setup ...
-         task.start();
-         task.waitFor();
-
    .. tab:: Python
 
       .. code-block:: python
@@ -346,23 +332,26 @@ There are two ways to execute tasks:
          task.start()
          task.wait_for()
 
+   .. tab:: Java
+
+      .. code-block:: java
+
+         // 1. Fire and forget (starts immediately)
+         Task task = python.task(script);
+         task.waitFor();
+
+         // 2. Deferred execution (start manually)
+         Task task = python.task(script);
+         // ... do other setup ...
+         task.start();
+         task.waitFor();
+
 Task Inputs and Outputs
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Tasks can receive inputs and produce outputs:
 
 .. tabs::
-
-   .. tab:: Java
-
-      .. code-block:: java
-
-         Task task = python.task("output = input1 + input2");
-         task.inputs.put("input1", 5);
-         task.inputs.put("input2", 6);
-         task.waitFor();
-         Object result = task.outputs.get("output");
-         // result == 11
 
    .. tab:: Python
 
@@ -374,6 +363,17 @@ Tasks can receive inputs and produce outputs:
          task.wait_for()
          result = task.outputs["output"]
          # result == 11
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         Task task = python.task("output = input1 + input2");
+         task.inputs.put("input1", 5);
+         task.inputs.put("input2", 6);
+         task.waitFor();
+         Object result = task.outputs.get("output");
+         // result == 11
 
  .. _non-serializable-objects-and-proxies:
 
@@ -427,6 +427,26 @@ Tasks provide callbacks for monitoring progress:
 
 .. tabs::
 
+   .. tab:: Python
+
+      .. code-block:: python
+
+         from appose import ResponseType
+
+         def task_listener(event):
+             if event.response_type == ResponseType.LAUNCH:
+                 print("Task started")
+             elif event.response_type == ResponseType.UPDATE:
+                 print(f"Progress: {task.current}/{task.maximum}")
+             elif event.response_type == ResponseType.COMPLETION:
+                 print("Task completed successfully")
+             elif event.response_type == ResponseType.FAILURE:
+                 print(f"Task failed: {task.error}", file=sys.stderr)
+
+         task = python.task(script)
+         task.listen(task_listener)
+         task.wait_for()
+
    .. tab:: Java
 
       .. code-block:: java
@@ -450,32 +470,22 @@ Tasks provide callbacks for monitoring progress:
          });
          task.waitFor();
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         from appose import ResponseType
-
-         def task_listener(event):
-             if event.response_type == ResponseType.LAUNCH:
-                 print("Task started")
-             elif event.response_type == ResponseType.UPDATE:
-                 print(f"Progress: {task.current}/{task.maximum}")
-             elif event.response_type == ResponseType.COMPLETION:
-                 print("Task completed successfully")
-             elif event.response_type == ResponseType.FAILURE:
-                 print(f"Task failed: {task.error}", file=sys.stderr)
-
-         task = python.task(script)
-         task.listen(task_listener)
-         task.wait_for()
-
 Canceling Tasks
 ^^^^^^^^^^^^^^^
 
 Long-running tasks can be canceled:
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         task = python.task(long_running_script)
+         # ... wait a bit ...
+         if not task.status.is_finished():
+             task.cancel()
+         task.wait_for()
 
    .. tab:: Java
 
@@ -487,16 +497,6 @@ Long-running tasks can be canceled:
              task.cancel();
          }
          task.waitFor();
-
-   .. tab:: Python
-
-      .. code-block:: python
-
-         task = python.task(long_running_script)
-         # ... wait a bit ...
-         if not task.status.is_finished():
-             task.cancel()
-         task.wait_for()
 
 Worker
 ------
@@ -518,23 +518,6 @@ Within worker scripts, a ``task`` object is available with the following:
 
 .. tabs::
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         # Access inputs
-         value = task.inputs["my_input"]
-
-         # Set outputs
-         task.outputs["my_output"] = result
-
-         # Report progress
-         task.update(current=5, maximum=10, message="Processing...")
-
-         # Check for cancelation
-         if task.cancel_requested:
-             task.cancel()
-
    .. tab:: Groovy
 
       .. code-block:: groovy
@@ -552,6 +535,23 @@ Within worker scripts, a ``task`` object is available with the following:
          if (task.cancelRequested) {
              task.cancel()
          }
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         # Access inputs
+         value = task.inputs["my_input"]
+
+         # Set outputs
+         task.outputs["my_output"] = result
+
+         # Report progress
+         task.update(current=5, maximum=10, message="Processing...")
+
+         # Check for cancelation
+         if task.cancel_requested:
+             task.cancel()
 
 Custom Workers
 ^^^^^^^^^^^^^^

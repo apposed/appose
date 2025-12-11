@@ -13,6 +13,19 @@ The most basic example: execute a simple calculation.
 
 .. tabs::
 
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         env = appose.system()
+         with env.groovy() as groovy:
+             task = groovy.task("5 + 6")
+             task.wait_for()
+             result = task.outputs["result"]
+             print(f"Result: {result}")  # 11
+
    .. tab:: Java
 
       .. code-block:: java
@@ -31,25 +44,35 @@ The most basic example: execute a simple calculation.
              }
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         env = appose.system()
-         with env.groovy() as groovy:
-             task = groovy.task("5 + 6")
-             task.wait_for()
-             result = task.outputs["result"]
-             print(f"Result: {result}")  # 11
-
 With Inputs and Outputs
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Passing inputs to tasks and retrieving outputs.
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         script = """
+         // Calculate the sum
+         result = a + b
+         task.outputs["sum"] = result
+         task.outputs["product"] = a * b
+         """
+
+         env = appose.system()
+         with env.groovy() as groovy:
+             task = groovy.task(script)
+             task.inputs["a"] = 10
+             task.inputs["b"] = 5
+             task.wait_for()
+
+             print(f"Sum: {task.outputs['sum']}")       # 15
+             print(f"Product: {task.outputs['product']}") # 50
 
    .. tab:: Java
 
@@ -79,29 +102,6 @@ Passing inputs to tasks and retrieving outputs.
              }
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         script = """
-         // Calculate the sum
-         result = a + b
-         task.outputs["sum"] = result
-         task.outputs["product"] = a * b
-         """
-
-         env = appose.system()
-         with env.groovy() as groovy:
-             task = groovy.task(script)
-             task.inputs["a"] = 10
-             task.inputs["b"] = 5
-             task.wait_for()
-
-             print(f"Sum: {task.outputs['sum']}")       # 15
-             print(f"Product: {task.outputs['product']}") # 50
-
 Progress Tracking
 -----------------
 
@@ -111,6 +111,59 @@ Golden Ratio Approximation
 A more complex example showing progress tracking and cancelation.
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+         from appose import ResponseType
+         from time import sleep
+
+         script = """
+         // Approximate the golden ratio using the Fibonacci sequence.
+         previous = 0
+         current = 1
+         iterations = 50
+         for (i=0; i<iterations; i++) {
+             if (task.cancelRequested) {
+                 task.cancel()
+                 break
+             }
+             task.update(null, i, iterations)
+             v = current
+             current += previous
+             previous = v
+         }
+         task.outputs["numer"] = current
+         task.outputs["denom"] = previous
+         """
+
+         def task_listener(event):
+             if event.response_type == ResponseType.UPDATE:
+                 print(f"Progress: {task.current}/{task.maximum}")
+             elif event.response_type == ResponseType.COMPLETION:
+                 numer = task.outputs["numer"]
+                 denom = task.outputs["denom"]
+                 ratio = numer / denom
+                 print(f"Result: {numer}/{denom} ≈ {ratio}")
+             elif event.response_type == ResponseType.CANCELATION:
+                 print("Task canceled")
+             elif event.response_type == ResponseType.FAILURE:
+                 print(f"Task failed: {task.error}", file=sys.stderr)
+
+         env = appose.system()
+         with env.groovy() as groovy:
+             task = groovy.task(script)
+             task.listen(task_listener)
+             task.start()
+
+             sleep(1)
+             if not task.status.is_finished():
+                 # Task is taking too long; request cancelation
+                 task.cancel()
+
+             task.wait_for()
 
    .. tab:: Java
 
@@ -174,59 +227,6 @@ A more complex example showing progress tracking and cancelation.
              }
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-         from appose import ResponseType
-         from time import sleep
-
-         script = """
-         // Approximate the golden ratio using the Fibonacci sequence.
-         previous = 0
-         current = 1
-         iterations = 50
-         for (i=0; i<iterations; i++) {
-             if (task.cancelRequested) {
-                 task.cancel()
-                 break
-             }
-             task.update(null, i, iterations)
-             v = current
-             current += previous
-             previous = v
-         }
-         task.outputs["numer"] = current
-         task.outputs["denom"] = previous
-         """
-
-         def task_listener(event):
-             if event.response_type == ResponseType.UPDATE:
-                 print(f"Progress: {task.current}/{task.maximum}")
-             elif event.response_type == ResponseType.COMPLETION:
-                 numer = task.outputs["numer"]
-                 denom = task.outputs["denom"]
-                 ratio = numer / denom
-                 print(f"Result: {numer}/{denom} ≈ {ratio}")
-             elif event.response_type == ResponseType.CANCELATION:
-                 print("Task canceled")
-             elif event.response_type == ResponseType.FAILURE:
-                 print(f"Task failed: {task.error}", file=sys.stderr)
-
-         env = appose.system()
-         with env.groovy() as groovy:
-             task = groovy.task(script)
-             task.listen(task_listener)
-             task.start()
-
-             sleep(1)
-             if not task.status.is_finished():
-                 # Task is taking too long; request cancelation
-                 task.cancel()
-
-             task.wait_for()
-
 Environment Building
 --------------------
 
@@ -236,6 +236,35 @@ Conda Environment
 Building an environment with conda dependencies.
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         env = appose.mamba() \
+             .conda("python=3.11", "numpy", "pandas") \
+             .channels("conda-forge") \
+             .log_debug() \
+             .build("my-data-env")
+
+         with env.python() as python:
+             script = """
+             import numpy as np
+             import pandas as pd
+
+             # Create a simple array
+             arr = np.array([1, 2, 3, 4, 5])
+             task.outputs["mean"] = float(np.mean(arr))
+             task.outputs["std"] = float(np.std(arr))
+             """
+
+             task = python.task(script)
+             task.wait_for()
+
+             print(f"Mean: {task.outputs['mean']}")
+             print(f"Std: {task.outputs['std']}")
 
    .. tab:: Java
 
@@ -271,41 +300,46 @@ Building an environment with conda dependencies.
              }
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         env = appose.mamba() \
-             .conda("python=3.11", "numpy", "pandas") \
-             .channels("conda-forge") \
-             .log_debug() \
-             .build("my-data-env")
-
-         with env.python() as python:
-             script = """
-             import numpy as np
-             import pandas as pd
-
-             # Create a simple array
-             arr = np.array([1, 2, 3, 4, 5])
-             task.outputs["mean"] = float(np.mean(arr))
-             task.outputs["std"] = float(np.std(arr))
-             """
-
-             task = python.task(script)
-             task.wait_for()
-
-             print(f"Mean: {task.outputs['mean']}")
-             print(f"Std: {task.outputs['std']}")
-
 Pixi Environment
 ^^^^^^^^^^^^^^^^
 
 Using Pixi for a modern, faster alternative to conda.
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         env = appose.pixi() \
+             .conda("python>=3.10", "numpy") \
+             .pypi("scikit-learn") \
+             .channels("conda-forge") \
+             .build("my-ml-env")
+
+         with env.python() as python:
+             script = """
+             import numpy as np
+             from sklearn.linear_model import LinearRegression
+
+             # Simple linear regression
+             X = np.array([[1], [2], [3], [4], [5]])
+             y = np.array([2, 4, 6, 8, 10])
+
+             model = LinearRegression()
+             model.fit(X, y)
+
+             task.outputs["slope"] = float(model.coef_[0])
+             task.outputs["intercept"] = float(model.intercept_)
+             """
+
+             task = python.task(script)
+             task.wait_for()
+
+             print(f"Slope: {task.outputs['slope']}")
+             print(f"Intercept: {task.outputs['intercept']}")
 
    .. tab:: Java
 
@@ -346,46 +380,40 @@ Using Pixi for a modern, faster alternative to conda.
              }
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         env = appose.pixi() \
-             .conda("python>=3.10", "numpy") \
-             .pypi("scikit-learn") \
-             .channels("conda-forge") \
-             .build("my-ml-env")
-
-         with env.python() as python:
-             script = """
-             import numpy as np
-             from sklearn.linear_model import LinearRegression
-
-             # Simple linear regression
-             X = np.array([[1], [2], [3], [4], [5]])
-             y = np.array([2, 4, 6, 8, 10])
-
-             model = LinearRegression()
-             model.fit(X, y)
-
-             task.outputs["slope"] = float(model.coef_[0])
-             task.outputs["intercept"] = float(model.intercept_)
-             """
-
-             task = python.task(script)
-             task.wait_for()
-
-             print(f"Slope: {task.outputs['slope']}")
-             print(f"Intercept: {task.outputs['intercept']}")
-
 uv Environment
 ^^^^^^^^^^^^^^
 
 Using uv for fast Python virtual environments.
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         env = appose.uv() \
+             .python("3.11") \
+             .include("requests", "beautifulsoup4") \
+             .build("my-web-env")
+
+         with env.python() as python:
+             script = """
+             import requests
+             from bs4 import BeautifulSoup
+
+             # Simple web scraping example
+             html = "<html><body><h1>Hello World</h1></body></html>"
+             soup = BeautifulSoup(html, 'html.parser')
+
+             task.outputs["title"] = soup.h1.text
+             """
+
+             task = python.task(script)
+             task.wait_for()
+
+             print(f"Title: {task.outputs['title']}")
 
    .. tab:: Java
 
@@ -421,40 +449,34 @@ Using uv for fast Python virtual environments.
              }
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         env = appose.uv() \
-             .python("3.11") \
-             .include("requests", "beautifulsoup4") \
-             .build("my-web-env")
-
-         with env.python() as python:
-             script = """
-             import requests
-             from bs4 import BeautifulSoup
-
-             # Simple web scraping example
-             html = "<html><body><h1>Hello World</h1></body></html>"
-             soup = BeautifulSoup(html, 'html.parser')
-
-             task.outputs["title"] = soup.h1.text
-             """
-
-             task = python.task(script)
-             task.wait_for()
-
-             print(f"Title: {task.outputs['title']}")
-
 From Environment Files
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Loading environments from configuration files.
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         # Auto-detect builder from file extension
+         env = appose.file("environment.yml") \
+             .log_debug() \
+             .build()
+
+         with env.python() as python:
+             task = python.task("import sys; task.outputs['version'] = sys.version")
+             task.wait_for()
+             print(f"Python version: {task.outputs['version']}")
+
+         # Or explicitly specify Mamba
+         env = appose.mamba("environment.yml").build()
+
+         # Or use Pixi with pixi.toml
+         env = appose.pixi("pixi.toml").build()
 
    .. tab:: Java
 
@@ -483,34 +505,25 @@ Loading environments from configuration files.
              }
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         # Auto-detect builder from file extension
-         env = appose.file("environment.yml") \
-             .log_debug() \
-             .build()
-
-         with env.python() as python:
-             task = python.task("import sys; task.outputs['version'] = sys.version")
-             task.wait_for()
-             print(f"Python version: {task.outputs['version']}")
-
-         # Or explicitly specify Mamba
-         env = appose.mamba("environment.yml").build()
-
-         # Or use Pixi with pixi.toml
-         env = appose.pixi("pixi.toml").build()
-
 Wrapping Existing Environments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Wrap and use existing conda/pixi environments.
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         # Wrap an existing environment (auto-detects type)
+         env = appose.wrap("/path/to/existing/env")
+
+         with env.python() as python:
+             task = python.task("print('Hello from wrapped environment!')")
+             task.wait_for()
 
    .. tab:: Java
 
@@ -531,19 +544,6 @@ Wrap and use existing conda/pixi environments.
              }
          }
 
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         # Wrap an existing environment (auto-detects type)
-         env = appose.wrap("/path/to/existing/env")
-
-         with env.python() as python:
-             task = python.task("print('Hello from wrapped environment!')")
-             task.wait_for()
-
 Advanced Examples
 -----------------
 
@@ -555,6 +555,31 @@ Running multiple tasks one after another.
 .. todo:: Running tasks in sequence is not very "Advanced". More appropriate would be things like: 1) open-ended tasks that send updates for communication back to the service process; or 2) use of the queue=main feature to run sensitive tasks on the main thread to avoid threading issues.
 
 .. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         env = appose.system()
+         with env.python() as python:
+             # Task 1: Initialize data
+             task1 = python.task(
+                 "data = [1, 2, 3, 4, 5]\n"
+                 "task.outputs['data'] = data"
+             )
+             task1.wait_for()
+
+             # Task 2: Process data
+             task2 = python.task(
+                 "result = sum(data) / len(data)\n"
+                 "task.outputs['average'] = result"
+             )
+             task2.inputs["data"] = task1.outputs["data"]
+             task2.wait_for()
+
+             print(f"Average: {task2.outputs['average']}")
 
    .. tab:: Java
 
@@ -585,31 +610,6 @@ Running multiple tasks one after another.
                  }
              }
          }
-
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         env = appose.system()
-         with env.python() as python:
-             # Task 1: Initialize data
-             task1 = python.task(
-                 "data = [1, 2, 3, 4, 5]\n"
-                 "task.outputs['data'] = data"
-             )
-             task1.wait_for()
-
-             # Task 2: Process data
-             task2 = python.task(
-                 "result = sum(data) / len(data)\n"
-                 "task.outputs['average'] = result"
-             )
-             task2.inputs["data"] = task1.outputs["data"]
-             task2.wait_for()
-
-             print(f"Average: {task2.outputs['average']}")
 
 Error Handling
 ^^^^^^^^^^^^^^
@@ -773,6 +773,46 @@ Complex data processing workflow.
 
 .. tabs::
 
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         env = appose.pixi() \
+             .conda("python>=3.10", "pandas", "numpy") \
+             .pypi("scikit-learn") \
+             .build("data-pipeline")
+
+         with env.python() as python:
+             # Step 1: Load and preprocess data
+             preprocess_script = (
+                 "import pandas as pd\n"
+                 "import numpy as np\n"
+                 "\n"
+                 "data = pd.DataFrame({\n"
+                 "    'x': np.random.randn(100),\n"
+                 "    'y': np.random.randn(100)\n"
+                 "})\n"
+                 "data_normalized = (data - data.mean()) / data.std()\n"
+                 "task.outputs['rows'] = len(data_normalized)\n"
+                 "task.outputs['status'] = 'Preprocessed'"
+             )
+             preprocess = python.task(preprocess_script)
+             preprocess.wait_for()
+
+             print(f"Preprocessed {preprocess.outputs['rows']} rows")
+
+             # Step 2: Train model
+             train_script = (
+                 "from sklearn.linear_model import LinearRegression\n"
+                 "task.outputs['status'] = 'Model trained'"
+             )
+             train = python.task(train_script)
+             train.wait_for()
+
+             print(train.outputs["status"])
+
    .. tab:: Java
 
       .. code-block:: java
@@ -821,43 +861,3 @@ Complex data processing workflow.
                  }
              }
          }
-
-   .. tab:: Python
-
-      .. code-block:: python
-
-         import appose
-
-         env = appose.pixi() \
-             .conda("python>=3.10", "pandas", "numpy") \
-             .pypi("scikit-learn") \
-             .build("data-pipeline")
-
-         with env.python() as python:
-             # Step 1: Load and preprocess data
-             preprocess_script = (
-                 "import pandas as pd\n"
-                 "import numpy as np\n"
-                 "\n"
-                 "data = pd.DataFrame({\n"
-                 "    'x': np.random.randn(100),\n"
-                 "    'y': np.random.randn(100)\n"
-                 "})\n"
-                 "data_normalized = (data - data.mean()) / data.std()\n"
-                 "task.outputs['rows'] = len(data_normalized)\n"
-                 "task.outputs['status'] = 'Preprocessed'"
-             )
-             preprocess = python.task(preprocess_script)
-             preprocess.wait_for()
-
-             print(f"Preprocessed {preprocess.outputs['rows']} rows")
-
-             # Step 2: Train model
-             train_script = (
-                 "from sklearn.linear_model import LinearRegression\n"
-                 "task.outputs['status'] = 'Model trained'"
-             )
-             train = python.task(train_script)
-             train.wait_for()
-
-             print(train.outputs["status"])
