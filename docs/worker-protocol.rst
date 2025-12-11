@@ -409,7 +409,7 @@ Best Practices
 Data Type Considerations
 ------------------------
 
-Appose uses JSON for serialization, which supports:
+Appose uses JSON for serialization, which natively supports:
 
 * Numbers (integers and floats)
 * Strings
@@ -418,7 +418,146 @@ Appose uses JSON for serialization, which supports:
 * Objects/dictionaries
 * null
 
-For complex types (like tensors), use **shared memory** with NDArrays. The shared memory name is passed as a string in inputs/outputs, and both sides can access the data without copying.
+Beyond JSON-Native Types
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For data types that JSON cannot represent natively, Appose uses a special encoding scheme: complex objects are wrapped in a dictionary with an ``appose_type`` key that identifies the object type. This allows seamless serialization of domain-specific types like shared memory blocks and multi-dimensional arrays.
+
+The worker implementations automatically handle encoding and decoding of these types. When your script produces a non-serializable object (e.g., a Python ``datetime`` instance), it is automatically exported and returned as a reference that you can interact with.
+
+Supported Extended Types
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+SharedMemory
+~~~~~~~~~~~~
+
+Represents a shared memory block for zero-copy data sharing.
+
+**Structure:**
+
+.. code-block:: json
+
+   {
+      "appose_type": "shm",
+      "name": "psm_4812f794",
+      "rsize": 16384
+   }
+
+**Fields:**
+
+* :code:`appose_type`: Must be :code:`"shm"`
+* :code:`name`: Unique identifier for the shared memory segment (OS-level name)
+* :code:`rsize`: Requested/nominal size in bytes (as required by shared memory constructors)
+
+NDArray
+~~~~~~~
+
+Represents a multi-dimensional array backed by shared memory, enabling efficient tensor sharing.
+
+**Structure:**
+
+.. code-block:: json
+
+   {
+      "appose_type": "ndarray",
+      "dtype": "float32",
+      "shape": [2, 3, 4],
+      "shm": {
+         "appose_type": "shm",
+         "name": "psm_4812f794",
+         "rsize": 16384
+      }
+   }
+
+**Fields:**
+
+* :code:`appose_type`: Must be :code:`"ndarray"`
+* :code:`dtype`: Data type of array elements (e.g., :code:`"float32"`, :code:`"int64"`)
+* :code:`shape`: Array dimensions as a list of integers (in C-order)
+* :code:`shm`: A SharedMemory object containing the actual data
+
+WorkerObject (Remote Object Proxies)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a worker script returns a non-JSON-serializable object (such as a Python datetime, Java object, or custom class instance), the worker automatically exports it with a generated variable name and returns a reference to it. This reference is converted into a proxy object on the client side, allowing you to interact with the remote object naturally.
+
+**Structure:**
+
+.. code-block:: json
+
+   {
+      "appose_type": "worker_object",
+      "var_name": "_appose_auto_0"
+   }
+
+**Fields:**
+
+* :code:`appose_type`: Must be :code:`"worker_object"`
+* :code:`var_name`: The exported variable name in the worker process
+
+.. _worker-object-protocol:
+
+**Usage:**
+
+When you receive a WorkerObject, the client libraries automatically convert it to a proxy object. You can access attributes directly or create a strongly-typed proxy for method calls:
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         # Worker returns a datetime object
+         now = service.task("import datetime; datetime.datetime.now()").wait_for().result()
+         # now is a ProxyObject wrapping the remote datetime instance
+         year = now.year  # Accesses the year attribute remotely
+         weekday = now.weekday()  # Calls a method remotely
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         // Worker returns a datetime object
+         WorkerObject now = (WorkerObject) service.task(
+             "import datetime; datetime.datetime.now()"
+         ).waitFor().result();
+         
+         // Access attributes directly
+         int year = (Integer) now.getAttribute("year");
+         
+         // Or create a strongly-typed proxy for method calls
+         interface DateTime {
+             int weekday();
+             float timestamp();
+         }
+         DateTime dt = now.proxy(DateTime.class);
+         int weekday = dt.weekday();
+         float timestamp = dt.timestamp();
+
+For an introduction to using proxies with task outputs, see the :doc:`core-concepts` documentation (the "Non-Serializable Objects and Proxies" section under "Task" subsections).
+
+Encoding Rules
+^^^^^^^^^^^^^^
+
+When serializing data to JSON:
+
+1. **Natively serializable types** (strings, numbers, booleans, lists, maps) are encoded as-is
+2. **SharedMemory** objects are wrapped with :code:`appose_type: "shm"`
+3. **NDArray** objects are wrapped with :code:`appose_type: "ndarray"` (includes their SharedMemory)
+4. **Non-serializable objects** (in worker mode only) are auto-exported and wrapped with :code:`appose_type: "worker_object"`
+
+Auto-export enables transparent handling of objects that cannot be serialized: the worker automatically persists them for future access, and the client receives a proxy to interact with them.
+
+Decoding Rules
+^^^^^^^^^^^^^^
+
+When deserializing JSON:
+
+1. **Check for** :code:`appose_type` **key** in dictionary objects
+2. **If** :code:`"shm"`: Reconstruct a SharedMemory object from the name and size
+3. **If** :code:`"ndarray"`: Reconstruct an NDArray, recursively decoding the embedded SharedMemory
+4. **If** :code:`"worker_object"`: (Client-side only) Convert to a proxy object for remote method/attribute access
+5. **Otherwise**: Return the dictionary or value as-is
 
 Testing Your Worker
 -------------------

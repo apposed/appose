@@ -375,8 +375,53 @@ Tasks can receive inputs and produce outputs:
          result = task.outputs["output"]
          # result == 11
 
-Task Callbacks
-^^^^^^^^^^^^^^
+ .. _non-serializable-objects-and-proxies:
+
+ Non-Serializable Objects and Proxies
+ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ If a task returns an object that cannot be represented in JSON (such as a Python ``datetime`` instance or a custom class), Appose automatically exports it to the worker and returns a **proxy object** that you can use to interact with the remote object:
+
+ .. tabs::
+
+    .. tab:: Python
+
+       .. code-block:: python
+
+          # Task returns a datetime object
+          task = python.task("import datetime; datetime.datetime.now()")
+          task.wait_for()
+          now = task.outputs.get("result")
+          # now is a ProxyObject wrapping the remote datetime instance
+          
+          year = now.year  # Access attributes
+          weekday = now.weekday()  # Call methods
+
+    .. tab:: Java
+
+       .. code-block:: java
+
+          // Task returns a datetime object
+          Task task = python.task("import datetime; datetime.datetime.now()");
+          task.waitFor();
+          WorkerObject now = (WorkerObject) task.outputs.get("result");
+          // now is a reference to the remote datetime instance
+          
+          // Access attributes
+          int year = (Integer) now.getAttribute("year");
+          
+          // Or create a strongly-typed proxy for method calls
+          interface DateTime {
+              int weekday();
+              float timestamp();
+          }
+          DateTime dt = now.proxy(DateTime.class);
+          int weekday = dt.weekday();
+
+ This feature enables seamless interaction with objects that live in the worker process. For detailed information on how this works under the hood, see :doc:`worker-protocol` (the "WorkerObject (Auto-Proxified Objects)" section under "Data Type Considerations").
+
+ Task Callbacks
+ ^^^^^^^^^^^^^^
 
 Tasks provide callbacks for monitoring progress:
 
