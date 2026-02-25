@@ -6,3 +6,8 @@ sphinx-copybutton>=0.5.0
 
 # MyST Parser for Markdown support
 myst-parser>=2.0.0
+
+# docutils 0.22 dropped the always-present 'backrefs' node attribute,
+# which causes sphinx_tabs to crash with a KeyError. Pin below 0.22 until
+# sphinx_tabs releases a fix.
+docutils<0.22
