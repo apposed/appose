@@ -53,7 +53,7 @@ Installation
            <dependency>
              <groupId>org.apposed</groupId>
              <artifactId>appose</artifactId>
-             <version>0.3.0</version>
+             <version>0.10.0</version>
            </dependency>
          </dependencies>
 
@@ -67,7 +67,7 @@ Installation
              mavenCentral()
          }
          dependencies {
-             implementation("org.apposed:appose:0.3.0")
+             implementation("org.apposed:appose:0.10.0")
          }
 
       **JAR Files**
@@ -179,8 +179,8 @@ Let's create a simple program that demonstrates Appose's basic functionality.
 
       .. code-block:: bash
 
-         javac -cp "appose-0.3.0.jar:dependency/*" HelloAppose.java
-         java -cp ".:appose-0.3.0.jar:dependency/*" HelloAppose
+         javac -cp "appose-0.10.0.jar:dependency/*" HelloAppose.java
+         java -cp ".:appose-0.10.0.jar:dependency/*" HelloAppose
 
 Understanding the Code
 -----------------------
