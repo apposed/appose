@@ -561,15 +561,330 @@ You can create custom workers that implement the Appose worker protocol. See :do
 Shared Memory
 -------------
 
-One of Appose's key features is **zero-copy tensor sharing** via shared memory. This allows large data structures (like tensors) to be shared between processes without copying.
+One of Appose's key features is **zero-copy tensor sharing** via shared memory. This allows large data structures like tensors to be shared between processes without copying — the data lives in a named memory region that both the host and worker processes can access directly.
+
+SharedMemory
+^^^^^^^^^^^^
+
+A ``SharedMemory`` block is a named region of memory accessible to multiple processes. One process creates it; others attach to it using its name.
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         # Create a new named shared memory block (1000 bytes)
+         shm = appose.SharedMemory(create=True, rsize=1000)
+         name = shm.name  # auto-generated name, e.g. "psm_4f3a2b"
+
+         # Write directly to the buffer
+         shm.buf[0] = 42
+
+         # Attach to an existing block (e.g. in another process)
+         shm2 = appose.SharedMemory(name=name, create=False, rsize=1000)
+         assert shm2.buf[0] == 42
+
+         # Clean up: unlink destroys the block; close only detaches
+         shm2.close()   # detach (do not destroy)
+         shm.unlink()   # destroy (call once across all processes)
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         import org.apposed.appose.SharedMemory;
+
+         // Create a new named shared memory block (1000 bytes)
+         SharedMemory shm = SharedMemory.create(1000);
+         String name = shm.name();  // auto-generated name, e.g. "psm_4f3a2b"
+
+         // Write to the buffer
+         shm.buf().put(0, (byte) 42);
+
+         // Attach to an existing block (e.g. from another process)
+         SharedMemory shm2 = SharedMemory.attach(name, 1000);
+         assert shm2.buf().get(0) == 42;
+
+         // Clean up: by default, creator destroys; attached only detaches
+         shm2.close();  // detach (does not destroy)
+         shm.close();   // destroy (creator calls unlink automatically)
+
+The ``rsize`` parameter is the **requested** size in bytes. The actual allocated size may be rounded up to the next page boundary — ``size`` / ``size()`` returns the actual amount.
 
 .. note::
 
-   Shared memory support is currently being enhanced. Check the API documentation for your language implementation for current capabilities.
+   By default, a block created with ``create=True`` (Python) or ``SharedMemory.create()`` (Java) will be **destroyed** when closed. A block attached with ``create=False`` (Python) or ``SharedMemory.attach()`` (Java) will only be **detached**. Call ``unlink_on_dispose()`` (Python) or ``unlinkOnClose()`` (Java) to override this behavior.
 
-The shared memory system is:
+NDArray
+^^^^^^^
 
-* **Platform-agnostic**: Works on Linux, macOS, and Windows
-* **Efficient**: No data copying required
-* **Named**: Buffers are identified by name for easy access
-* **Automatic cleanup**: Shared memory is automatically released when no longer needed
+``NDArray`` wraps a ``SharedMemory`` block and adds **dtype** and **shape** metadata, making it a typed multi-dimensional array. This is the primary way to pass tensor data between processes.
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         # Create a float32 array with shape [7, 512, 512]
+         data = appose.NDArray("float32", [7, 512, 512])
+
+         name = data.shm.name  # shared memory name
+         dtype = data.dtype    # "float32"
+         shape = data.shape    # [7, 512, 512]
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         import org.apposed.appose.NDArray;
+         import org.apposed.appose.NDArray.DType;
+         import org.apposed.appose.NDArray.Shape;
+         import static org.apposed.appose.NDArray.Shape.Order.F_ORDER;
+
+         // Create a float32 array with shape (7, 512, 512) in F_ORDER
+         NDArray data = new NDArray(DType.FLOAT32, new Shape(F_ORDER, 7, 512, 512));
+
+         String name  = data.shm().name();  // shared memory name
+         DType  dtype = data.dType();        // DType.FLOAT32
+         Shape  shape = data.shape();        // Shape(F_ORDER, 7, 512, 512)
+
+Data Types
+""""""""""
+
+The ``dtype`` (Python) / ``DType`` (Java) specifies the element type:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 25 15
+
+   * - dtype string
+     - Java DType
+     - Bytes/element
+   * - ``int8``
+     - ``DType.INT8``
+     - 1
+   * - ``uint8``
+     - ``DType.UINT8``
+     - 1
+   * - ``int16``
+     - ``DType.INT16``
+     - 2
+   * - ``uint16``
+     - ``DType.UINT16``
+     - 2
+   * - ``int32``
+     - ``DType.INT32``
+     - 4
+   * - ``uint32``
+     - ``DType.UINT32``
+     - 4
+   * - ``int64``
+     - ``DType.INT64``
+     - 8
+   * - ``uint64``
+     - ``DType.UINT64``
+     - 8
+   * - ``float32``
+     - ``DType.FLOAT32``
+     - 4
+   * - ``float64``
+     - ``DType.FLOAT64``
+     - 8
+   * - ``complex64``
+     - ``DType.COMPLEX64``
+     - 8
+   * - ``complex128``
+     - ``DType.COMPLEX128``
+     - 16
+   * - ``bool``
+     - ``DType.BOOL``
+     - 1
+
+Shape and Axis Order
+""""""""""""""""""""
+
+Python's ``shape`` is a list of dimensions in **C order** (row-major, NumPy convention), where the last axis changes fastest in memory.
+
+Java's ``Shape`` additionally carries an explicit **axis order**:
+
+* ``C_ORDER`` — fastest-moving dimension first (NumPy/C convention)
+* ``F_ORDER`` — fastest-moving dimension last (ImgLib2/Fortran convention)
+
+When an NDArray crosses language boundaries, both sides see the same raw memory layout. A Java ``Shape(F_ORDER, 4, 3, 2)`` corresponds to Python shape ``[2, 3, 4]`` in C order — the memory layout is identical; only the axis interpretation differs.
+
+Passing NDArrays to Workers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``NDArray`` objects can be placed directly in task inputs and outputs. Appose serializes only the **metadata** (name, dtype, shape) — not the array data itself. The worker reconstructs the NDArray by attaching to the same named shared memory block.
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         import appose
+
+         env = appose.system()
+         with env.python() as service:
+             # Create array in host process and fill with data
+             data = appose.NDArray("float32", [512, 512])
+             data.ndarray()[:] = 1.0
+
+             # Worker receives it as an appose.NDArray and calls .ndarray()
+             script = "task.outputs['total'] = float(data.ndarray().sum())"
+             task = service.task(script, {"data": data})
+             task.wait_for()
+             print(task.outputs["total"])  # 262144.0
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         import org.apposed.appose.*;
+         import org.apposed.appose.NDArray.DType;
+         import org.apposed.appose.NDArray.Shape;
+         import static org.apposed.appose.NDArray.Shape.Order.F_ORDER;
+         import java.nio.FloatBuffer;
+         import java.util.HashMap;
+         import java.util.Map;
+
+         Environment env = Appose.system();
+         try (Service service = env.python()) {
+             // Create array in host process and fill with data
+             NDArray data = new NDArray(DType.FLOAT32, new Shape(F_ORDER, 512, 512));
+             FloatBuffer buf = data.buffer().asFloatBuffer();
+             for (int i = 0; i < 512 * 512; i++) buf.put(i, 1.0f);
+
+             // Worker receives it as an appose.NDArray and calls .ndarray()
+             String script = "task.outputs['total'] = float(data.ndarray().sum())";
+             Map<String, Object> inputs = new HashMap<>();
+             inputs.put("data", data);
+             Task task = service.task(script, inputs);
+             task.waitFor();
+             System.out.println(task.outputs.get("total"));  // 262144.0
+         }
+
+NumPy Integration (Python)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In Python, call ``ndarray()`` on an ``NDArray`` to get a **zero-copy NumPy array** backed by the shared memory:
+
+.. code-block:: python
+
+   import appose
+   import numpy as np
+
+   data = appose.NDArray("float32", [7, 512, 512])
+   arr = data.ndarray()  # numpy.ndarray, shape (7, 512, 512), dtype float32
+
+   # Any numpy operation reads and writes shared memory directly — no copying
+   arr[0] = np.zeros((512, 512))
+   mean = arr.mean()
+
+This works identically in worker scripts — the worker receives the ``NDArray``, calls ``.ndarray()``, and gets a zero-copy NumPy view of the same shared memory.
+
+ImgLib2 Integration (Java)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The `imglib2-appose <https://github.com/imglib/imglib2-appose>`_ library bridges Appose's ``NDArray`` with `ImgLib2 <https://imagej.net/libs/imglib2>`_ images for zero-copy integration with Java image processing pipelines.
+
+.. code-block:: java
+
+   import net.imglib2.appose.NDArrays;
+   import net.imglib2.appose.ShmImg;
+   import net.imglib2.type.numeric.real.FloatType;
+
+   // Create an ShmImg (ImgLib2 Img backed by shared memory)
+   ShmImg<FloatType> img = new ShmImg<>(new FloatType(), 512, 512);
+
+   // Use it like any ImgLib2 Img
+   for (FloatType pixel : img)
+       pixel.set(1.0f);
+
+   // Extract the NDArray to pass to a worker (zero-copy: same shared memory)
+   NDArray data = img.ndArray();
+
+   // Wrap an existing NDArray as an ImgLib2 image (also zero-copy)
+   ArrayImg<FloatType, ?> view = NDArrays.asArrayImg(data, new FloatType());
+
+   // Convert any RandomAccessibleInterval (copies if not already shared memory)
+   NDArray copied = NDArrays.asNDArray(img);
+
+The type mapping between ImgLib2 and Appose:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 25
+
+   * - ImgLib2 Type
+     - NDArray DType
+   * - ``ByteType`` / ``UnsignedByteType``
+     - ``INT8`` / ``UINT8``
+   * - ``ShortType`` / ``UnsignedShortType``
+     - ``INT16`` / ``UINT16``
+   * - ``IntType`` / ``UnsignedIntType``
+     - ``INT32`` / ``UINT32``
+   * - ``LongType`` / ``UnsignedLongType``
+     - ``INT64`` / ``UINT64``
+   * - ``FloatType``
+     - ``FLOAT32``
+   * - ``DoubleType``
+     - ``FLOAT64``
+   * - ``ComplexFloatType``
+     - ``COMPLEX64``
+   * - ``ComplexDoubleType``
+     - ``COMPLEX128``
+   * - ``NativeBoolType``
+     - ``BOOL``
+
+.. note::
+
+   ImgLib2 uses F_ORDER (column-major) axis ordering by convention. An ``ShmImg`` created with dimensions ``[4, 3, 2]`` in Java will appear to Python as shape ``[2, 3, 4]`` in C order — the same memory layout, with axes in reverse order.
+
+Shared Memory Lifecycle
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Use context managers (Python) or try-with-resources (Java) for reliable cleanup:
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         # NDArray context manager disposes the underlying SharedMemory
+         with appose.NDArray("float32", [512, 512]) as data:
+             arr = data.ndarray()
+             # ... work with arr ...
+         # shared memory released here
+
+         # SharedMemory context manager
+         with appose.SharedMemory(create=True, rsize=1000) as shm:
+             shm.buf[0] = 42
+         # shared memory released here
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         // NDArray implements AutoCloseable
+         try (NDArray data = new NDArray(DType.FLOAT32, new Shape(F_ORDER, 512, 512))) {
+             FloatBuffer buf = data.buffer().asFloatBuffer();
+             // ... work with buf ...
+         } // shared memory released here
+
+         // SharedMemory implements AutoCloseable
+         try (SharedMemory shm = SharedMemory.create(1000)) {
+             shm.buf().put(0, (byte) 42);
+         } // shared memory released here
+
+.. important::
+
+   The shared memory block should be **unlinked exactly once** across all processes — this destroys the underlying OS resource. The process that **created** the block is responsible; processes that **attached** should only close their connection. Appose enforces this automatically through the ``unlinkOnClose`` / ``unlink_on_dispose`` defaults.
