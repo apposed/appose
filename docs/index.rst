@@ -67,6 +67,7 @@ The workflow for using Appose follows these steps:
    getting-started
    core-concepts
    examples
+   python-environments
    worker-protocol
 
 .. toctree::
