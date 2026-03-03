@@ -31,10 +31,10 @@ use case:
      - Key limitation
    * - **Pixi**
      - Multi-platform reproducibility, GPU/CUDA, mixed conda+PyPI deps
-     - Requires ``pixi`` to be installed
+     - Slower environment resolution than uv due to the conda solver
    * - **uv**
      - Pure-Python environments, fast installs
-     - No native (non-PyPI) package support
+     - No conda package support
    * - **Mamba**
      - Existing ``environment.yml`` files, conda-only packages
      - Slower solves, no built-in feature system
@@ -274,10 +274,11 @@ installs across machines and CI runs.
 
          import appose
 
-         # Point Appose at an existing pixi.toml environment.
+         # Point Appose at a non-default pixi.toml environment.
          # Appose will run `pixi install -e cuda` if needed,
          # then launch a worker in that environment.
-         env = appose.pixi(config="path/to/pixi.toml", environment="cuda") \
+         env = appose.pixi("path/to/pixi.toml") \
+             .environment("cuda") \
              .build()
 
          with env.python() as svc:
@@ -290,8 +291,11 @@ installs across machines and CI runs.
 
       .. code-block:: java
 
-         Environment env = Appose.pixi(
-                 new File("path/to/pixi.toml"), "cuda")
+         // Point Appose at a non-default pixi.toml environment.
+         // Appose will run `pixi install -e cuda` if needed,
+         // then launch a worker in that environment.
+         Environment env = Appose.pixi("path/to/pixi.toml")
+             .environment("cuda")
              .build();
 
          try (Service python = env.python()) {
@@ -326,9 +330,9 @@ gracefully to CPU at runtime:
          # If CUDA packages are unavailable on this platform,
          # pixi will raise an error — catch it and use CPU.
          try:
-             env = appose.pixi(config="pixi.toml", environment="cuda").build()
+             env = appose.pixi("pixi.toml").environment("cuda").build()
          except Exception:
-             env = appose.pixi(config="pixi.toml", environment="default").build()
+             env = appose.pixi("pixi.toml").build()  # default env
 
          worker_script = (
              "import torch\n"
@@ -347,9 +351,9 @@ gracefully to CPU at runtime:
 
          Environment env;
          try {
-             env = Appose.pixi(new File("pixi.toml"), "cuda").build();
+             env = Appose.pixi("pixi.toml").environment("cuda").build();
          } catch (Exception e) {
-             env = Appose.pixi(new File("pixi.toml"), "default").build();
+             env = Appose.pixi("pixi.toml").build();  // default env
          }
 
          String script =
@@ -435,7 +439,7 @@ automatic GPU acceleration, and the Appose code that uses it:
          is_gpu_platform = platform.system() in ("Linux", "Windows")
          env_name = "cuda" if is_gpu_platform else "default"
 
-         env = appose.pixi(config="pixi.toml", environment=env_name).build()
+         env = appose.pixi("pixi.toml").environment(env_name).build()
 
          worker_script = (
              "import tensorflow as tf\n"
@@ -462,7 +466,8 @@ automatic GPU acceleration, and the Appose code that uses it:
                  String envName = isGpuPlatform ? "cuda" : "default";
 
                  Environment env = Appose
-                     .pixi(new File("pixi.toml"), envName)
+                     .pixi("pixi.toml")
+                     .environment(envName)
                      .build();
 
                  String script =
