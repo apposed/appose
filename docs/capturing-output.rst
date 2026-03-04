@@ -386,4 +386,5 @@ result:
 (e.g. by redirecting ``sys.stderr`` to a thread-local buffer during task
 execution) and emit it as a new protocol response type — say ``STDERR`` — so
 the service can dispatch it to the correct task listener with full attribution,
-even with concurrent tasks running. But this is not yet implemented.
+even with concurrent tasks running. But this is not yet implemented; see
+`apposed/appose#27 <https://github.com/apposed/appose/issues/27>`_.
