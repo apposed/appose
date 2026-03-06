@@ -709,14 +709,16 @@ The ``dtype`` (Python) / ``DType`` (Java) specifies the element type:
 Shape and Axis Order
 """"""""""""""""""""
 
-Python's ``shape`` is a list of dimensions in **C order** (row-major, NumPy convention), where the last axis changes fastest in memory.
+Python's ``shape`` is a list of dimensions in **C order** (row-major, NumPy convention), where the **last** axis is fastest-moving in memory.
 
-Java's ``Shape`` additionally carries an explicit **axis order**:
+Java's ``Shape`` carries an explicit **axis order** describing how to interpret the shape tuple:
 
-* ``C_ORDER`` — fastest-moving dimension first (NumPy/C convention)
-* ``F_ORDER`` — fastest-moving dimension last (ImgLib2/Fortran convention)
+* ``C_ORDER`` — last index is fastest (NumPy/matrix convention: shape is ``(H, W, ...)``)
+* ``F_ORDER`` — first index is fastest (ImgLib2/spatial convention: shape is ``(W, H, ...)``)
 
-When an NDArray crosses language boundaries, both sides see the same raw memory layout. A Java ``Shape(F_ORDER, 4, 3, 2)`` corresponds to Python shape ``[2, 3, 4]`` in C order — the memory layout is identical; only the axis interpretation differs.
+These are two ways to *label the same bytes*. A Java ``Shape(F_ORDER, W=3, H=2)`` and a NumPy array with shape ``(2, 3)`` both describe the same memory layout — x-first scan, row by row. The ``order`` field captures the indexing convention of the shape tuple, not a different physical arrangement.
+
+When an NDArray crosses language boundaries, Appose serializes the shape in C order, reversing the dimension list for F_ORDER arrays. A Java ``Shape(F_ORDER, 4, 3, 2)`` arrives in the Appose worker as shape ``[2, 3, 4]`` — same raw bytes, but axes listed in reverse order, matching NumPy/matrix convention.
 
 Passing NDArrays to Workers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
