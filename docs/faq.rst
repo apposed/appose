@@ -58,7 +58,8 @@ You can specify a custom directory when building:
 
          Environment env = Appose.pixi()
              .conda("python>=3.10")
-             .build("/custom/path/my-env");
+             .base("/custom/path/my-env")
+             .build();
 
    .. tab:: Python
 
@@ -66,7 +67,8 @@ You can specify a custom directory when building:
 
          env = appose.pixi() \
              .conda("python>=3.10") \
-             .build("/custom/path/my-env")
+             .base("/custom/path/my-env")
+             .build()
 
 Can I use an existing conda/pixi environment?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -312,8 +314,9 @@ Try enabling debug output to see what's happening:
 
          env = appose.pixi() \
              .conda("python>=3.10") \
+             .name("my-env")
              .log_debug()  # This logs build output
-             .build("my-env")
+             .build()
 
    .. tab:: Java
 
@@ -321,8 +324,9 @@ Try enabling debug output to see what's happening:
 
          Environment env = Appose.pixi()
              .conda("python>=3.10")
+             .name("my-env")
              .logDebug()  // This logs build output to stderr
-             .build("my-env");
+             .build();
 
 If the build is truly stuck, check:
 

@@ -50,7 +50,8 @@ Builder Types
                 .conda("python>=3.10", "numpy") \
                 .pypi("cowsay") \
                 .channels("conda-forge") \
-                .build("my-env")
+                .name("my-env") \
+                .build()
 
       .. tab:: Java
 
@@ -60,7 +61,8 @@ Builder Types
                 .conda("python>=3.10", "numpy")
                 .pypi("cowsay")
                 .channels("conda-forge")
-                .build("my-env");
+                .name("my-env")
+                .build();
 
 **MambaBuilder**
    Traditional conda environments via micromamba.
@@ -92,7 +94,8 @@ Builder Types
             env = appose.uv() \
                 .python("3.11") \
                 .include("numpy", "pandas") \
-                .build("my-env")
+                .name("my-env") \
+                .build()
 
       .. tab:: Java
 
@@ -101,7 +104,8 @@ Builder Types
             Environment env = Appose.uv()
                 .python("3.11")
                 .include("numpy", "pandas")
-                .build("my-env");
+                .name("my-env")
+                .build();
 
 **SystemBuilder**
    Uses system PATH without installing packages.
@@ -136,16 +140,18 @@ All builders support monitoring build progress:
 
          env = appose.pixi() \
              .conda("python>=3.10", "numpy") \
+             .name("my-env") \
              .subscribe_progress(progress_callback) \
              .subscribe_output(lambda line: print(f"Output: {line}")) \
              .subscribe_error(lambda line: print(f"Error: {line}", file=sys.stderr)) \
-             .build("my-env")
+             .build()
 
          # Or simply log everything:
          env = appose.pixi() \
              .conda("python>=3.10", "numpy") \
+             .name("my-env") \
              .log_debug() \
-             .build("my-env")
+             .build()
 
    .. tab:: Java
 
@@ -153,18 +159,20 @@ All builders support monitoring build progress:
 
          Environment env = Appose.pixi()
              .conda("python>=3.10", "numpy")
+             .name("my-env")
              .subscribeProgress(progress -> {
                  System.out.println("Progress: " + progress.current + "/" + progress.total);
              })
              .subscribeOutput(line -> System.out.println("Output: " + line))
              .subscribeError(line -> System.err.println("Error: " + line))
-             .build("my-env");
+             .build();
 
          // Or simply log everything to stderr:
          Environment env = Appose.pixi()
              .conda("python>=3.10", "numpy")
+             .name("my-env")
              .logDebug()
-             .build("my-env");
+             .build();
 
 Environment
 -----------

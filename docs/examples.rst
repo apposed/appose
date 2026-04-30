@@ -246,8 +246,9 @@ Building an environment with conda dependencies.
          env = appose.mamba() \
              .conda("python=3.11", "numpy", "pandas") \
              .channels("conda-forge") \
+             .name("my-data-env") \
              .log_debug() \
-             .build("my-data-env")
+             .build()
 
          with env.python() as python:
              script = """
@@ -277,8 +278,9 @@ Building an environment with conda dependencies.
                  Environment env = Appose.mamba()
                      .conda("python=3.11", "numpy", "pandas")
                      .channels("conda-forge")
+                     .name("my-data-env")
                      .logDebug()
-                     .build("my-data-env");
+                     .build();
 
                  try (Service python = env.python()) {
                      String script = """
@@ -317,7 +319,8 @@ Using Pixi for a modern, faster alternative to conda.
              .conda("python>=3.10", "numpy") \
              .pypi("scikit-learn") \
              .channels("conda-forge") \
-             .build("my-ml-env")
+             .name("my-ml-env") \
+             .build()
 
          with env.python() as python:
              script = """
@@ -353,7 +356,8 @@ Using Pixi for a modern, faster alternative to conda.
                      .conda("python>=3.10", "numpy")
                      .pypi("scikit-learn")
                      .channels("conda-forge")
-                     .build("my-ml-env");
+                     .name("my-ml-env")
+                     .build();
 
                  try (Service python = env.python()) {
                      String script = """
@@ -396,7 +400,8 @@ Using uv for fast Python virtual environments.
          env = appose.uv() \
              .python("3.11") \
              .include("requests", "beautifulsoup4") \
-             .build("my-web-env")
+             .name("my-web-env") \
+             .build()
 
          with env.python() as python:
              script = """
@@ -426,7 +431,8 @@ Using uv for fast Python virtual environments.
                  Environment env = Appose.uv()
                      .python("3.11")
                      .include("requests", "beautifulsoup4")
-                     .build("my-web-env");
+                     .name("my-web-env")
+                     .build();
 
                  try (Service python = env.python()) {
                      String script = """
@@ -706,7 +712,8 @@ Running deep learning models from a different language.
                  Environment env = Appose.pixi()
                      .conda("python>=3.10")
                      .pypi("torch", "torchvision")
-                     .build("pytorch-env");
+                     .name("pytorch-env")
+                     .build();
 
                  try (Service python = env.python()) {
                      // Load a pre-trained model
@@ -742,7 +749,8 @@ Running deep learning models from a different language.
          env = appose.pixi() \
              .conda("python>=3.10") \
              .pypi("torch", "torchvision") \
-             .build("pytorch-env")
+             .name("pytorch-env") \
+             .build()
 
          with env.python() as python:
              # Load a pre-trained model
@@ -782,7 +790,8 @@ Complex data processing workflow.
          env = appose.pixi() \
              .conda("python>=3.10", "pandas", "numpy") \
              .pypi("scikit-learn") \
-             .build("data-pipeline")
+             .name("data-pipeline") \
+             .build()
 
          with env.python() as python:
              # Step 1: Load and preprocess data
@@ -824,7 +833,8 @@ Complex data processing workflow.
                  Environment env = Appose.pixi()
                      .conda("python>=3.10", "pandas", "numpy")
                      .pypi("scikit-learn")
-                     .build("data-pipeline");
+                     .name("data-pipeline")
+                     .build();
 
                  try (Service python = env.python()) {
                      // Step 1: Load and preprocess data

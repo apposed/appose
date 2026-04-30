@@ -216,7 +216,8 @@ These libraries work great with Appose for sharing numerical data.
    Environment env = Appose.pixi()
        .conda("python>=3.10")
        .pypi("numpy", "torch")
-       .build("ml-env");
+       .name("ml-env")
+       .build();
 
    # Workers can now use NumPy/PyTorch
    try (Service python = env.python()) {

@@ -224,7 +224,8 @@ Instead of using the system environment, you can build isolated environments wit
              .conda("python>=3.10", "numpy", "pandas") \
              .pypi("scikit-learn") \
              .channels("conda-forge") \
-             .build("my-ml-env")
+             .name("my-ml-env") \
+             .build()
 
       **Using Conda/Mamba**:
 
@@ -239,7 +240,8 @@ Instead of using the system environment, you can build isolated environments wit
          env = appose.uv() \
              .python("3.11") \
              .include("numpy", "pandas", "matplotlib") \
-             .build("my-env")
+             .name("my-env") \
+             .build()
 
    .. tab:: Java
 
@@ -251,7 +253,8 @@ Instead of using the system environment, you can build isolated environments wit
              .conda("python>=3.10", "numpy", "pandas")
              .pypi("scikit-learn")
              .channels("conda-forge")
-             .build("my-ml-env");
+             .name("my-ml-env")
+             .build();
 
       **Using Conda/Mamba**:
 
@@ -267,6 +270,7 @@ Instead of using the system environment, you can build isolated environments wit
          Environment env = Appose.uv()
              .python("3.11")
              .include("numpy", "pandas", "matplotlib")
-             .build("my-env");
+             .name("my-env")
+             .build();
 
 Environments are cached by default in ``~/.local/share/appose/<env-name>``, so they only need to be built once.

@@ -61,7 +61,8 @@ The simplest Pixi setup specifies conda and PyPI dependencies together:
              .channels("conda-forge") \
              .conda("python=3.11", "numpy", "scipy") \
              .pypi("torch", "torchvision") \
-             .build("my-dl-env")
+             .name("my-dl-env") \
+             .build()
 
          with env.python() as svc:
              task = svc.task("import torch; result = str(torch.__version__)")
@@ -76,7 +77,8 @@ The simplest Pixi setup specifies conda and PyPI dependencies together:
              .channels("conda-forge")
              .conda("python=3.11", "numpy", "scipy")
              .pypi("torch", "torchvision")
-             .build("my-dl-env");
+             .name("my-dl-env")
+             .build();
 
          try (Service python = env.python()) {
              Task task = python.task(
