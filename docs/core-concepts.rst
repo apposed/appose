@@ -444,7 +444,7 @@ Tasks provide callbacks for monitoring progress:
              if event.response_type == ResponseType.LAUNCH:
                  print("Task started")
              elif event.response_type == ResponseType.UPDATE:
-                 print(f"Progress: {task.current}/{task.maximum}")
+                 print(f"Progress: {event.current}/{event.maximum}")
              elif event.response_type == ResponseType.COMPLETION:
                  print("Task completed successfully")
              elif event.response_type == ResponseType.FAILURE:

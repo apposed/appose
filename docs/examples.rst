@@ -140,7 +140,7 @@ A more complex example showing progress tracking and cancelation.
 
          def task_listener(event):
              if event.response_type == ResponseType.UPDATE:
-                 print(f"Progress: {task.current}/{task.maximum}")
+                 print(f"Progress: {event.current}/{event.maximum}")
              elif event.response_type == ResponseType.COMPLETION:
                  numer = task.outputs["numer"]
                  denom = task.outputs["denom"]

@@ -147,7 +147,7 @@ Use listeners to monitor progress and support cancelation:
 
          def listener(event):
              if event.response_type == ResponseType.UPDATE:
-                 print(f"Progress: {task.current}/{task.maximum}")
+                 print(f"Progress: {event.current}/{event.maximum}")
              elif event.response_type == ResponseType.COMPLETION:
                  print("Done!")
 
@@ -167,7 +167,7 @@ Use listeners to monitor progress and support cancelation:
          task.listen(event -> {
              switch (event.responseType) {
                  case UPDATE:
-                     System.out.println("Progress: " + task.current + "/" + task.maximum);
+                     System.out.println("Progress: " + event.current + "/" + event.maximum);
                      break;
                  case COMPLETION:
                      System.out.println("Done!");
