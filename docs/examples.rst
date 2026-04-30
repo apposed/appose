@@ -79,6 +79,7 @@ Passing inputs to tasks and retrieving outputs.
       .. code-block:: java
 
          import org.apposed.appose.*;
+         import java.util.Map;
 
          public class WithInputsOutputs {
              public static void main(String[] args) throws Exception {
@@ -91,9 +92,7 @@ Passing inputs to tasks and retrieving outputs.
                          task.outputs["product"] = a * b
                          """;
 
-                     Task task = python.task(script);
-                     task.inputs.put("a", 10);
-                     task.inputs.put("b", 5);
+                     Task task = python.task(script, Map.of("a", 10, "b", 5));
                      task.waitFor();
 
                      System.out.println("Sum: " + task.outputs.get("sum"));      // 15
@@ -197,7 +196,7 @@ A more complex example showing progress tracking and cancelation.
                      task.listen(event -> {
                          switch (event.responseType) {
                              case UPDATE:
-                                 System.out.println("Progress: " + task.current + "/" + task.maximum);
+                                 System.out.println("Progress: " + event.current + "/" + event.maximum);
                                  break;
                              case COMPLETION:
                                  long numer = ((Number) task.outputs.get("numer")).longValue();
@@ -592,6 +591,7 @@ Running multiple tasks one after another.
       .. code-block:: java
 
          import org.apposed.appose.*;
+         import java.util.Map;
 
          public class SequentialTasks {
              public static void main(String[] args) throws Exception {
@@ -608,8 +608,7 @@ Running multiple tasks one after another.
                      Task task2 = python.task("""
                          result = sum(data) / len(data)
                          task.outputs["average"] = result
-                         """);
-                     task2.inputs.put("data", task1.outputs.get("data"));
+                         """, Map.of("data", task1.outputs.get("data")));
                      task2.waitFor();
 
                      System.out.println("Average: " + task2.outputs.get("average"));

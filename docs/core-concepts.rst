@@ -376,9 +376,8 @@ Tasks can receive inputs and produce outputs:
 
       .. code-block:: java
 
-         Task task = python.task("output = input1 + input2");
-         task.inputs.put("input1", 5);
-         task.inputs.put("input2", 6);
+         Task task = python.task("output = input1 + input2",
+             Map.of("input1", 5, "input2", 6));
          task.waitFor();
          Object result = task.outputs.get("output");
          // result == 11
@@ -466,7 +465,7 @@ Tasks provide callbacks for monitoring progress:
                      System.out.println("Task started");
                      break;
                  case UPDATE:
-                     System.out.println("Progress: " + task.current + "/" + task.maximum);
+                     System.out.println("Progress: " + event.current + "/" + event.maximum);
                      break;
                  case COMPLETION:
                      System.out.println("Task completed successfully");

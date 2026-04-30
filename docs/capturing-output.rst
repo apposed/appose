@@ -225,7 +225,7 @@ is especially useful for post-mortem analysis after a crash.
 
       .. code-block:: python
 
-         for line in service.invalid_lines:
+         for line in service.invalid_lines():
              print("Unexpected stdout:", line)
 
    .. tab:: Java
@@ -249,7 +249,7 @@ exception tracebacks, and anything the worker script sends to ``sys.stderr``.
 
       .. code-block:: python
 
-         for line in service.error_lines:
+         for line in service.error_lines():
              print("Worker stderr:", line)
 
    .. tab:: Java

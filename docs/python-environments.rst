@@ -65,7 +65,7 @@ The simplest Pixi setup specifies conda and PyPI dependencies together:
              .build()
 
          with env.python() as svc:
-             task = svc.task("import torch; result = str(torch.__version__)")
+             task = svc.task("import torch; task.outputs['result'] = str(torch.__version__)")
              task.wait_for()
              print(task.outputs["result"])
 
@@ -82,7 +82,7 @@ The simplest Pixi setup specifies conda and PyPI dependencies together:
 
          try (Service python = env.python()) {
              Task task = python.task(
-                 "import torch; result = str(torch.__version__)");
+                 "import torch; task.outputs['result'] = str(torch.__version__)");
              task.waitFor();
              System.out.println(task.outputs.get("result"));
          }
