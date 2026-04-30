@@ -23,7 +23,7 @@ The most basic example: execute a simple calculation.
          with env.groovy() as groovy:
              task = groovy.task("5 + 6")
              task.wait_for()
-             result = task.outputs["result"]
+             result = task.result()
              print(f"Result: {result}")  # 11
 
    .. tab:: Java
@@ -38,7 +38,7 @@ The most basic example: execute a simple calculation.
                  try (Service python = env.python()) {
                      Task task = python.task("5 + 6");
                      task.waitFor();
-                     Object result = task.outputs.get("result");
+                     Object result = task.result();
                      System.out.println("Result: " + result); // 11
                  }
              }
@@ -473,9 +473,9 @@ Loading environments from configuration files.
              .build()
 
          with env.python() as python:
-             task = python.task("import sys; task.outputs['version'] = sys.version")
+             task = python.task("import sys; sys.version")
              task.wait_for()
-             print(f"Python version: {task.outputs['version']}")
+             print(f"Python version: {task.result()}")
 
          # Or explicitly specify Mamba
          env = appose.mamba("environment.yml").build()
@@ -497,9 +497,9 @@ Loading environments from configuration files.
                      .build();
 
                  try (Service python = env.python()) {
-                     Task task = python.task("import sys; task.outputs['version'] = sys.version");
+                     Task task = python.task("import sys; sys.version");
                      task.waitFor();
-                     System.out.println("Python version: " + task.outputs.get("version"));
+                     System.out.println("Python version: " + task.result());
                  }
 
                  // Or explicitly specify Mamba
@@ -671,7 +671,7 @@ Properly handling task failures.
 
          env = appose.system()
          with env.python() as python:
-             task = python.task("result = 1 / 0")
+             task = python.task("1 / 0")
 
              def task_listener(event):
                  if event.response_type == ResponseType.FAILURE:

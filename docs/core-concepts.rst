@@ -283,14 +283,14 @@ Services create tasks to execute scripts:
       .. code-block:: python
 
          with env.python() as python:
-             task = python.task("result = 5 + 6")
+             task = python.task("5 + 6")
 
    .. tab:: Java
 
       .. code-block:: java
 
          try (Service python = env.python()) {
-             Task task = python.task("result = 5 + 6");
+             Task task = python.task("5 + 6");
          }
 
 Task
@@ -398,7 +398,7 @@ If a task returns an object that cannot be represented in JSON (such as a Python
          # Task returns a datetime object
          task = python.task("import datetime; datetime.datetime.now()")
          task.wait_for()
-         now = task.outputs.get("result")
+         now = task.result()
          # now is a ProxyObject wrapping the remote datetime instance
          
          year = now.year  # Access attributes
@@ -411,7 +411,7 @@ If a task returns an object that cannot be represented in JSON (such as a Python
          // Task returns a datetime object
          Task task = python.task("import datetime; datetime.datetime.now()");
          task.waitFor();
-         WorkerObject now = (WorkerObject) task.outputs.get("result");
+         WorkerObject now = (WorkerObject) task.result();
          // now is a reference to the remote datetime instance
          
          // Access attributes

@@ -117,19 +117,18 @@ Use the ``inputs`` and ``outputs`` maps:
 
       .. code-block:: python
 
-         task = groovy.task("result = x * 2")
+         task = groovy.task("x * 2")
          task.inputs["x"] = 42
          task.wait_for()
-         result = task.outputs["result"]  # 84
+         result = task.result()  # 84
 
    .. tab:: Java
 
       .. code-block:: java
 
-         Task task = python.task("result = x * 2");
-         task.inputs.put("x", 42);
+         Task task = python.task("x * 2", Map.of("x", 42));
          task.waitFor();
-         Object result = task.outputs.get("result"); // 84
+         Object result = task.result(); // 84
 
 For large arrays/tensors, use **shared memory** to avoid copying (see worker implementation docs).
 
@@ -224,7 +223,7 @@ Check the task status and error message:
 
       .. code-block:: python
 
-         task = python.task("result = 1 / 0")  # Will fail
+         task = python.task("1 / 0")  # Will fail
          task.wait_for()
 
          if task.status == TaskStatus.FAILED:
@@ -235,7 +234,7 @@ Check the task status and error message:
 
       .. code-block:: java
 
-         Task task = python.task("result = 1 / 0"); // Will fail
+         Task task = python.task("1 / 0"); // Will fail
          task.waitFor();
 
          if (task.status == TaskStatus.FAILED) {
@@ -365,26 +364,26 @@ Make sure your script explicitly sets outputs:
       .. code-block:: python
 
          # Wrong (output not captured)
-         result = 5 + 6
+         answer = 5 + 6
 
          # Right (explicit output)
-         task.outputs["result"] = 5 + 6
+         task.outputs["answer"] = 5 + 6
 
          # Also right (single expression)
-         5 + 6  # Automatically becomes task.outputs["result"]
+         5 + 6  # Implicitly becomes task.outputs["result"]
 
    .. tab:: Groovy
 
       .. code-block:: groovy
 
          // Wrong (output not captured)
-         result = 5 + 6
+         answer = 5 + 6
 
          // Right (explicit output)
-         task.outputs["result"] = 5 + 6
+         task.outputs["answer"] = 5 + 6
 
          // Also right (single expression)
-         5 + 6  // Automatically becomes task.outputs["result"]
+         5 + 6  // Implicitly becomes task.outputs["result"]
 
 Tasks are slow to start
 ^^^^^^^^^^^^^^^^^^^^^^^

@@ -314,7 +314,7 @@ indicating which phase the task is in:
              elif event.response_type == ResponseType.UPDATE:
                  print(f"  {event.current}/{event.maximum}: {event.message}")
              elif event.response_type == ResponseType.COMPLETION:
-                 print("Done:", task.outputs.get("result"))
+                 print("Done:", task.result())
              elif event.response_type == ResponseType.FAILURE:
                  print("Failed:", task.error)
              elif event.response_type == ResponseType.CRASH:
@@ -339,7 +339,7 @@ indicating which phase the task is in:
                          event.current, event.maximum, event.message);
                      break;
                  case COMPLETION:
-                     System.out.println("Done: " + task.outputs.get("result"));
+                     System.out.println("Done: " + task.result());
                      break;
                  case FAILURE:
                      System.err.println("Failed: " + task.error);

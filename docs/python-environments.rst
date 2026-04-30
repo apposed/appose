@@ -65,9 +65,9 @@ The simplest Pixi setup specifies conda and PyPI dependencies together:
              .build()
 
          with env.python() as svc:
-             task = svc.task("import torch; task.outputs['result'] = str(torch.__version__)")
+             task = svc.task("import torch; str(torch.__version__)")
              task.wait_for()
-             print(task.outputs["result"])
+             print(task.result())
 
    .. tab:: Java
 
@@ -82,9 +82,9 @@ The simplest Pixi setup specifies conda and PyPI dependencies together:
 
          try (Service python = env.python()) {
              Task task = python.task(
-                 "import torch; task.outputs['result'] = str(torch.__version__)");
+                 "import torch; str(torch.__version__)");
              task.waitFor();
-             System.out.println(task.outputs.get("result"));
+             System.out.println(task.result());
          }
 
 This generates a ``pixi.toml``, runs ``pixi install``, and caches the
@@ -285,9 +285,9 @@ installs across machines and CI runs.
 
          with env.python() as svc:
              task = svc.task(
-                 "import torch; result = torch.cuda.is_available()")
+                 "import torch; torch.cuda.is_available()")
              task.wait_for()
-             print("CUDA available:", task.outputs["result"])
+             print("CUDA available:", task.result())
 
    .. tab:: Java
 
@@ -302,9 +302,9 @@ installs across machines and CI runs.
 
          try (Service python = env.python()) {
              Task task = python.task(
-                 "import torch; result = torch.cuda.is_available()");
+                 "import torch; torch.cuda.is_available()");
              task.waitFor();
-             System.out.println("CUDA available: " + task.outputs.get("result"));
+             System.out.println("CUDA available: " + task.result());
          }
 
 .. tip::
@@ -339,13 +339,13 @@ gracefully to CPU at runtime:
          worker_script = (
              "import torch\n"
              "device = 'cuda' if torch.cuda.is_available() else 'cpu'\n"
-             "result = device\n"
+             "device\n"
          )
 
          with env.python() as svc:
              task = svc.task(worker_script)
              task.wait_for()
-             print("Running on:", task.outputs["result"])
+             print("Running on:", task.result())
 
    .. tab:: Java
 
@@ -361,12 +361,12 @@ gracefully to CPU at runtime:
          String script =
              "import torch\n" +
              "device = 'cuda' if torch.cuda.is_available() else 'cpu'\n" +
-             "result = device\n";
+             "'cuda' if torch.cuda.is_available() else 'cpu'";
 
          try (Service python = env.python()) {
              Task task = python.task(script);
              task.waitFor();
-             System.out.println("Running on: " + task.outputs.get("result"));
+             System.out.println("Running on: " + task.result());
          }
 
 Complete Example: TensorFlow Worker
@@ -446,13 +446,13 @@ automatic GPU acceleration, and the Appose code that uses it:
          worker_script = (
              "import tensorflow as tf\n"
              "gpus = tf.config.list_physical_devices('GPU')\n"
-             "result = f'{len(gpus)} GPU(s) available'\n"
+             "f'{len(gpus)} GPU(s) available'\n"
          )
 
          with env.python() as svc:
              task = svc.task(worker_script)
              task.wait_for()
-             print(task.outputs["result"])
+             print(task.result())
 
    .. tab:: Java
 
@@ -475,12 +475,12 @@ automatic GPU acceleration, and the Appose code that uses it:
                  String script =
                      "import tensorflow as tf\n" +
                      "gpus = tf.config.list_physical_devices('GPU')\n" +
-                     "result = f'{len(gpus)} GPU(s) available'\n";
+                     "f'{len(gpus)} GPU(s) available'";
 
                  try (Service python = env.python()) {
                      Task task = python.task(script);
                      task.waitFor();
-                     System.out.println(task.outputs.get("result"));
+                     System.out.println(task.result());
                  }
              }
          }

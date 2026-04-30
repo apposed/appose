@@ -261,7 +261,7 @@ Here's a complete example of the request/response flow:
       {
          "task": "abc-123",
          "requestType": "EXECUTE",
-         "script": "result = x * 2",
+         "script": "x * 2",
          "inputs": {"x": 5}
       }
 
@@ -577,7 +577,7 @@ Example manual test:
    ./my-worker
 
    # Send an EXECUTE request (paste this as one line)
-   {"task":"test-123","requestType":"EXECUTE","script":"result = 5 + 6","inputs":{}}
+   {"task":"test-123","requestType":"EXECUTE","script":"5 + 6","inputs":{}}
 
    # Expected responses:
    {"task":"test-123","responseType":"LAUNCH"}

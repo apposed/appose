@@ -135,7 +135,7 @@ Let's create a simple program that demonstrates Appose's basic functionality.
              task.wait_for()
 
              # Get the result
-             result = task.outputs["result"]
+             result = task.result()
              print(f"Result: {result}")
              # Output: Result: 11
 
@@ -168,7 +168,7 @@ Let's create a simple program that demonstrates Appose's basic functionality.
                      task.waitFor();
 
                      // Get the result
-                     Object result = task.outputs.get("result");
+                     Object result = task.result();
                      System.out.println("Result: " + result);
                      // Output: Result: 11
                  }

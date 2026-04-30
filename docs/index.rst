@@ -35,7 +35,7 @@ Quick Example
          with env.groovy() as groovy:
              task = groovy.task("5 + 6")
              task.wait_for()
-             result = task.outputs["result"]
+             result = task.result()
              # result == 11
 
    .. tab:: Java
@@ -46,7 +46,7 @@ Quick Example
          try (Service python = env.python()) {
              Task task = python.task("5 + 6");
              task.waitFor();
-             Object result = task.outputs.get("result");
+             Object result = task.result();
              // result == 11
          }
 
