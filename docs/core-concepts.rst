@@ -438,7 +438,7 @@ Tasks provide callbacks for monitoring progress:
 
       .. code-block:: python
 
-         from appose import ResponseType
+         from appose.service import ResponseType
 
          def task_listener(event):
              if event.response_type == ResponseType.LAUNCH:

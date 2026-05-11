@@ -116,7 +116,7 @@ A more complex example showing progress tracking and cancelation.
       .. code-block:: python
 
          import appose
-         from appose import ResponseType
+         from appose.service import ResponseType
          from time import sleep
 
          script = """
@@ -667,7 +667,7 @@ Properly handling task failures.
       .. code-block:: python
 
          import appose
-         from appose import ResponseType, TaskStatus
+         from appose.service import ResponseType, TaskStatus
 
          env = appose.system()
          with env.python() as python:

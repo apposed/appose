@@ -143,7 +143,7 @@ Use listeners to monitor progress and support cancelation:
 
       .. code-block:: python
 
-         from appose import ResponseType
+         from appose.service import ResponseType
 
          def listener(event):
              if event.response_type == ResponseType.UPDATE:

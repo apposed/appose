@@ -306,7 +306,7 @@ indicating which phase the task is in:
 
       .. code-block:: python
 
-         from appose import ResponseType
+         from appose.service import ResponseType
 
          def on_event(event):
              if event.response_type == ResponseType.LAUNCH:
