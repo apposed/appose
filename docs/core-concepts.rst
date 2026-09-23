@@ -668,50 +668,72 @@ The ``dtype`` (Python) / ``DType`` (Java) specifies the element type:
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 25 15
+   :widths: 20 15 25 15
 
    * - dtype string
+     - Short form
      - Java DType
      - Bytes/element
    * - ``int8``
+     - ``i1``
      - ``DType.INT8``
      - 1
    * - ``uint8``
+     - ``u1``
      - ``DType.UINT8``
      - 1
    * - ``int16``
+     - ``i2``
      - ``DType.INT16``
      - 2
    * - ``uint16``
+     - ``u2``
      - ``DType.UINT16``
      - 2
    * - ``int32``
+     - ``i4``
      - ``DType.INT32``
      - 4
    * - ``uint32``
+     - ``u4``
      - ``DType.UINT32``
      - 4
    * - ``int64``
+     - ``i8``
      - ``DType.INT64``
      - 8
    * - ``uint64``
+     - ``u8``
      - ``DType.UINT64``
      - 8
+   * - ``float16``
+     - ``f2``
+     - ``DType.FLOAT16``
+     - 2
    * - ``float32``
+     - ``f4``
      - ``DType.FLOAT32``
      - 4
    * - ``float64``
+     - ``f8``
      - ``DType.FLOAT64``
      - 8
    * - ``complex64``
+     - ``c8``
      - ``DType.COMPLEX64``
      - 8
    * - ``complex128``
+     - ``c16``
      - ``DType.COMPLEX128``
      - 16
    * - ``bool``
+     - ``b1`` or ``?``
      - ``DType.BOOL``
      - 1
+
+For convenience, the NumPy-style short forms are also accepted when creating an NDArray (Python) or parsing a label with ``DType.fromLabel`` (Java), optionally prefixed with ``=`` (native byte order) or ``|`` (byte order not applicable). They are normalized to the standard name, which is what gets serialized; e.g. ``"u2"`` and ``"|u1"`` become ``"uint16"`` and ``"uint8"`` respectively.
+
+Array data is always in the machine's **native byte order**, since shared memory is only ever shared between processes on the same machine. For this reason, dtype strings with an explicit byte order (``<`` or ``>``, e.g. ``"<u2"``) are rejected, so that dtype parsing behaves the same on every machine. Platform-dependent types (e.g. ``longdouble``, or single-character codes like ``"l"``) are likewise not supported.
 
 Shape and Axis Order
 """"""""""""""""""""
