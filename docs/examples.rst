@@ -695,7 +695,34 @@ Deep Learning Inference
 
 .. todo:: This example needs to be finished. We can use https://github.com/ctrueden/starfun3d
 
-Running deep learning models from a different language.
+Running deep learning models from a different language. Loading a model is
+slow, but inference is fast, so we load the model once, in a
+:ref:`library <libraries>`, and reuse it across tasks.
+
+First, the library, ``classifier.py``: plain Python, with no reference to
+Appose, which you can develop and test in your IDE.
+
+.. code-block:: python
+
+   import torch
+   import torchvision.models as models
+
+   _model = None
+
+   def get_model():
+       global _model
+       if _model is None:
+           # Slow: happens only once, in the first task that needs it.
+           _model = models.resnet18(weights=None)
+           _model.eval()
+       return _model
+
+   def classify(pixels: list[float]) -> int:
+       tensor = torch.tensor(pixels).reshape(1, 3, 224, 224)
+       with torch.no_grad():
+           return int(get_model()(tensor).argmax())
+
+Then, register the library with the service, and use it from tasks:
 
 .. tabs::
 
@@ -705,35 +732,33 @@ Running deep learning models from a different language.
 
          import org.apposed.appose.*;
 
+         import java.io.File;
+         import java.util.Collections;
+
          public class DeepLearning {
              public static void main(String[] args) throws Exception {
                  // Build environment with PyTorch
                  Environment env = Appose.pixi()
                      .conda("python>=3.10")
-                     .pypi("torch", "torchvision")
+                     .pypi("appose", "torch", "torchvision")
                      .name("pytorch-env")
                      .build();
 
                  try (Service python = env.python()) {
-                     // Load a pre-trained model
-                     Task loadModel = python.task("""
-                         import torch
-                         import torchvision.models as models
+                     python.importLibrary("classifier", new File("classifier.py"));
 
-                         # Load pre-trained ResNet
-                         model = models.resnet18(pretrained=False)
-                         model.eval()
+                     // Optional: warm up the model before the first real task.
+                     python.task("import classifier\nclassifier.get_model()").waitFor();
 
-                         task.outputs["status"] = "Model loaded"
-                         """);
-                     loadModel.waitFor();
-
-                     System.out.println(loadModel.outputs.get("status"));
-
-                     // In a real scenario, you would:
-                     // 1. Share image tensors via shared memory
-                     // 2. Run inference
-                     // 3. Get results back via shared memory
+                     for (int i = 0; i < 3; i++) {
+                         // In a real scenario, share the image via shared memory.
+                         float[] pixels = new float[3 * 224 * 224];
+                         Task task = python.task(
+                             "import classifier\nclassifier.classify(pixels)",
+                             Collections.singletonMap("pixels", pixels)
+                         ).waitFor();
+                         System.out.println("Class: " + task.result());
+                     }
                  }
              }
          }
@@ -747,29 +772,24 @@ Running deep learning models from a different language.
          # Build environment with your ML framework
          env = appose.pixi() \
              .conda("python>=3.10") \
-             .pypi("torch", "torchvision") \
+             .pypi("appose", "torch", "torchvision") \
              .name("pytorch-env") \
              .build()
 
          with env.python() as python:
-             # Load a pre-trained model
-             script = (
-                 "import torch\n"
-                 "import torchvision.models as models\n"
-                 "\n"
-                 "model = models.resnet18(pretrained=False)\n"
-                 "model.eval()\n"
-                 "task.outputs['status'] = 'Model loaded'"
-             )
-             load_model = python.task(script)
-             load_model.wait_for()
+             python.import_library("classifier", path="classifier.py")
 
-             print(load_model.outputs["status"])
+             # Optional: warm up the model before the first real task.
+             python.task("import classifier\nclassifier.get_model()").wait_for()
 
-             # In a real scenario, you would:
-             # 1. Share tensors via shared memory
-             # 2. Run inference
-             # 3. Get results back
+             for _ in range(3):
+                 # In a real scenario, share the image via shared memory.
+                 pixels = [0.0] * (3 * 224 * 224)
+                 task = python.task(
+                     "import classifier\nclassifier.classify(pixels)",
+                     {"pixels": pixels},
+                 ).wait_for()
+                 print(f"Class: {task.result()}")
 
 Data Science Pipeline
 ^^^^^^^^^^^^^^^^^^^^^

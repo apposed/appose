@@ -293,6 +293,104 @@ Services create tasks to execute scripts:
              Task task = python.task("5 + 6");
          }
 
+.. _libraries:
+
+Libraries
+^^^^^^^^^
+
+A common pattern is to initialize something expensive once, such as loading a
+deep learning model, and then reuse it across many tasks. The best way to do
+this is with a **library**: ordinary source code in the worker's language,
+which the service sends to the worker, and which tasks then use via normal
+``import`` statements.
+
+Because a library is a plain source file, you can develop it in an IDE with
+full code completion and type checking, with no reference to Appose's
+``task`` variable. For example, ``models.py``:
+
+.. code-block:: python
+
+   from niftymodellib import Model, load_model
+
+   _MODELS: dict[str, Model] = {}
+
+   def get_model(key: str) -> Model:
+       if key not in _MODELS:
+           _MODELS[key] = load_model(key)  # Slow, but only once per key.
+       return _MODELS[key]
+
+   def run_model(key: str, image):
+       return get_model(key).infer(image)  # Fast, once the model is warm.
+
+Register the library with the service, then import it from any task:
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         with env.python() as python:
+             python.import_library("models", path="models.py")
+             for image in images:
+                 task = python.task(
+                     "import models\nmodels.run_model(key, image)",
+                     {"key": "cells", "image": image},
+                 ).wait_for()
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         try (Service python = env.python()) {
+             python.importLibrary("models", new File("models.py"));
+             for (Object image : images) {
+                 Map<String, Object> inputs = new HashMap<>();
+                 inputs.put("key", "cells");
+                 inputs.put("image", image);
+                 Task task = python.task(
+                     "import models\nmodels.run_model(key, image)", inputs
+                 ).waitFor();
+             }
+         }
+
+Only the first task to use the ``cells`` model pays to load it. The library
+stays imported for the life of the worker, so its state (here, the
+``_MODELS`` cache) persists across tasks.
+
+A library can be given in several forms:
+
+* **A single source file** becomes a module (Python) or a set of classes
+  (Groovy).
+* **A directory** becomes a package with subpackages (Python), or a source root
+  whose subdirectories correspond to packages (Groovy).
+* **Source code**, passed directly: a string for a single file, or a map from
+  relative path to source code for a directory. This is handy for tests and
+  generated code. In Python, use ``import_library(name, source=...)``; in Java,
+  use ``importLibrarySource(name, ...)``.
+
+How libraries behave:
+
+* **Code is captured at registration.** The service reads the source and sends
+  it to the worker, which never reads the original files. To pick up later
+  edits, register the library again. Registering changed source replaces the
+  library, discarding its state; registering unchanged source does nothing, so
+  warm state survives an accidental repeat.
+* **Resources are read when used.** For a library given as a directory, the
+  worker reads resources (e.g. via ``importlib.resources`` in Python, or
+  ``Class.getResource`` in Groovy) from that directory when they are accessed,
+  just as an installed package would.
+* **Registration does not run the library.** In Python, the first ``import``
+  does; in Groovy, the first use of a class does. Registering a library before
+  the service starts makes it available to the service's init script, which
+  can then warm it up ahead of time.
+* **Libraries take precedence** over installed modules or packages of the same
+  name.
+* **In Groovy**, a library is a set of classes, and its state lives in their
+  static fields. The library's name only identifies it for re-registration;
+  classes are imported by the packages declared in their source, e.g.
+  ``import mylib.Models``.
+
 Task
 ----
 

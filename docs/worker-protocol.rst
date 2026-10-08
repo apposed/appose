@@ -24,6 +24,28 @@ A worker process must:
 3. Handle each request appropriately and in a timely manner
 4. Use UUIDs to track tasks across the request/response lifecycle
 
+Startup Scripts
+---------------
+
+Before it begins reading requests, a worker may run **startup scripts**, which
+the service writes to temporary files and passes to the worker via environment
+variables. The worker runs each script, if present, in this order:
+
+1. ``APPOSE_LIBRARY_SCRIPT``: registers the service's libraries (see
+   :ref:`libraries`), so that tasks and the init
+   script can use them.
+2. ``APPOSE_INIT_SCRIPT``: the service's init script. Variables it defines are
+   made available to all tasks.
+
+The worker should delete each file after running it, and report a script's
+failure on stderr without exiting. Supporting startup scripts is optional for
+custom workers, but a worker that ignores them does not support the service's
+init script or libraries.
+
+The library script is written in the worker's language by the service's
+script syntax, so a worker supports libraries only if its script syntax knows
+how to register them. The built-in Python and Groovy workers both do.
+
 Request Format
 --------------
 
@@ -309,6 +331,7 @@ The ``python_worker`` module implements the protocol in Python. Key features:
 * Executes Python scripts using ``exec()``
 * Provides a ``task`` object to scripts with ``inputs``, ``outputs``, ``cancel_requested``
 * Handles multiple concurrent tasks via threading
+* Makes libraries importable via a custom import finder
 * Source: https://github.com/apposed/appose-python
 
 Groovy Worker
@@ -319,6 +342,7 @@ The ``GroovyWorker`` class implements the protocol in Groovy/Java. Key features:
 * Executes Groovy scripts using ``GroovyShell``
 * Provides a ``task`` object with ``inputs``, ``outputs``, ``cancelRequested``
 * Handles multiple concurrent tasks via threading
+* Compiles libraries into a class loader shared by all tasks
 * Source: https://github.com/apposed/appose-java
 
 Creating Custom Workers

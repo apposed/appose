@@ -132,6 +132,31 @@ Use the ``inputs`` and ``outputs`` maps:
 
 For large arrays/tensors, use **shared memory** to avoid copying (see worker implementation docs).
 
+How do I keep a model loaded between tasks?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Put the loading code in a **library**: a plain source file, registered with
+the service, which tasks then ``import``. The library's state persists for the
+life of the worker, so the model is loaded only once:
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         python.import_library("models", path="models.py")
+         python.task("import models\nmodels.run_model(key, image)", inputs)
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         python.importLibrary("models", new File("models.py"));
+         python.task("import models\nmodels.run_model(key, image)", inputs);
+
+See :ref:`libraries` for details.
+
 How do I handle long-running tasks?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
