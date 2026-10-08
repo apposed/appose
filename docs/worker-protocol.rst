@@ -23,6 +23,36 @@ A worker process must:
 2. Issue **responses** in Appose's response format on stdout
 3. Handle each request appropriately and in a timely manner
 4. Use UUIDs to track tasks across the request/response lifecycle
+5. Identify itself with a ``HELLO`` response, before anything else
+6. Survive bad requests: report each one, then keep processing requests
+
+A bad request is one the worker cannot handle, such as invalid JSON or an
+unknown request type. The worker should report it on stderr; and if the
+request names a task the worker has not seen before, the worker should also
+send a ``FAILURE`` response for that task, since the service is waiting for it.
+
+Version Compatibility
+---------------------
+
+The service and the worker must implement the same **major.minor** version of
+Appose: e.g., a service from appose-java 1.1.3 works with a worker from
+appose-python 1.1.0, but not 1.2.0. Patch versions may differ, so that either
+side can receive bug and security fixes independently.
+
+To make this checkable, a worker's first message must be a ``HELLO`` response,
+sent before running any startup scripts (which may be slow). The service then
+checks the worker's version:
+
+* If the versions are incompatible, or the worker's first message is something
+  other than ``HELLO`` (as from a worker predating this handshake), the service
+  shuts down the worker. Its pending and subsequent tasks fail, with an error
+  message explaining the incompatibility.
+* Otherwise, the worker's ``HELLO`` message is available from the service
+  (``service.worker_info()`` in Python, ``service.workerInfo()`` in Java).
+
+The check can be disabled by setting the ``APPOSE_SKIP_VERSION_CHECK``
+environment variable (or, in Java, the ``appose.skipVersionCheck`` system
+property) for the service's process.
 
 Startup Scripts
 ---------------
@@ -137,6 +167,31 @@ All responses include:
 
 Response Types
 ^^^^^^^^^^^^^^
+
+HELLO
+~~~~~
+
+Identifies the worker to the service. Unlike other responses, it does not
+belong to any task.
+
+**Structure:**
+
+.. code-block:: json
+
+   {
+      "responseType": "HELLO",
+      "implementation": "appose-python",
+      "version": "0.12.1"
+   }
+
+**Fields:**
+
+* ``responseType`` (string): Must be ``"HELLO"``
+* ``implementation`` (string): Name of the worker implementation, for messages
+* ``version`` (string): The version of Appose whose protocol the worker
+  implements (see `Version Compatibility`_)
+
+**When to send:** Once, as the worker's very first message.
 
 LAUNCH
 ~~~~~~
@@ -423,7 +478,8 @@ Best Practices
 
 1. **Always flush stdout** after writing responses
 2. **Validate JSON** before processing requests
-3. **Handle errors gracefully** and send FAILURE responses
+3. **Handle errors gracefully** and send FAILURE responses, without letting
+   a bad request stop the worker from processing later ones
 4. **Support cancelation** by checking flags periodically in long scripts
 5. **Use UUIDs correctly** to match responses to requests
 6. **Keep responses line-delimited** (one JSON object per line, no pretty-printing)

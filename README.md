@@ -66,6 +66,8 @@ But Appose is compatible with any program that abides by the
    standard input (stdin) stream.
 2. The worker must issue responses in Appose's *response* format on its
    standard output (stdout) stream.
+3. The worker's first response must be HELLO, identifying the version of
+   Appose it implements, which must match the service's major.minor version.
 
 ### Requests to worker from service
 
@@ -102,6 +104,18 @@ A *response* is a single line of JSON with a `task` key taking the
 form of a
 [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier),
 and a `responseType` key with one of the following values:
+
+#### HELLO
+
+A HELLO response identifies the worker. It is the worker's first message,
+and the only response without a `task` key.
+```json
+{
+   "responseType" : "HELLO",
+   "implementation" : "appose-python",
+   "version" : "0.12.1"
+}
+```
 
 #### LAUNCH
 
