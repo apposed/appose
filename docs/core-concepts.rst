@@ -174,6 +174,33 @@ All builders support monitoring build progress:
              .logDebug()
              .build();
 
+.. _appose-package:
+
+The appose Package
+^^^^^^^^^^^^^^^^^^
+
+A Python worker runs ``appose.python_worker``, so its environment must contain
+the ``appose`` package, implementing the same major.minor version of Appose as
+your program (see :ref:`version compatibility <version-compatibility>`). When
+you build an environment by listing packages (e.g. via ``.conda()``,
+``.pypi()`` or ``.include()``) without mentioning ``appose``, the builder adds a
+compatible one for you:
+
+* For a release of Appose, e.g. 1.1.2: ``appose>=1.1,<1.2``, from PyPI.
+* For a development version of appose-python: that same appose-python, from
+  wherever it was installed (e.g. a local checkout, in editable mode).
+* For a development version of appose-java: the main branch of appose-python.
+
+To install a different appose-python, list ``appose`` yourself, e.g.
+``.pypi("appose==1.1.3")``; or set the ``APPOSE_PYTHON_REQUIREMENT``
+environment variable (or, in Java, the ``appose.python.requirement`` system
+property) to a pip requirement, or to a local directory to install in editable
+mode.
+
+Environments built from files (``pixi.toml``, ``environment.yml``,
+``pyproject.toml``, ``requirements.txt``) are used as written, so they must
+list ``appose`` themselves.
+
 Environment
 -----------
 

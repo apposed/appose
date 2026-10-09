@@ -109,6 +109,7 @@ directly in a ``pixi.toml``:
 
    [dependencies]
    python = "==3.11"
+   appose = "*"                # Required by the worker; see below
    numpy = "*"
    scipy = "*"
    pip = "*"
@@ -137,6 +138,11 @@ When Pixi installs this environment on any of the four platforms it will
 automatically select the correct TensorFlow variant. No ``if sys.platform``
 guards needed in your Python worker.
 
+An environment file must list ``appose``, which the Python worker needs.
+Consider pinning it to your Appose version's major.minor, e.g.
+``appose = ">=1.1,<1.2"``, since the worker must match it; see
+:ref:`appose-package`.
+
 .. tip::
 
    Lock your TensorFlow version on Linux/Windows (``"==2.15.0"``) to ensure
@@ -160,6 +166,7 @@ cleanest way to make this opt-in without creating a separate environment file:
 
    [dependencies]
    python = "==3.11"
+   appose = "*"
    numpy = "*"
    pip = "*"
 

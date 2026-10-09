@@ -35,6 +35,8 @@ The service shuts the worker down gracefully by closing the worker's stdin.
 The worker must then finish its pending tasks and exit. The service may
 also kill the worker at any time, along with its descendant processes.
 
+.. _version-compatibility:
+
 Version Compatibility
 ---------------------
 

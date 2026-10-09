@@ -145,6 +145,13 @@ Code contributions should go to the language-specific repositories:
 - **Java code**: https://github.com/apposed/appose-java
 - **Python code**: https://github.com/apposed/appose-python
 
+The two implementations are released in lockstep, and each one's tests run
+against the other's latest code: locally, from a sibling checkout (e.g.
+`../appose-java` beside `appose-python`); and in CI, from the other
+repository's branch of the same name, if any, else its main branch. So to
+make a change spanning both repositories, push same-named branches to each,
+and their builds will test them together.
+
 ## Reporting Issues
 
 Use the shared issue tracker for all Appose projects:

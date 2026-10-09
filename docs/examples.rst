@@ -740,7 +740,7 @@ Then, register the library with the service, and use it from tasks:
                  // Build environment with PyTorch
                  Environment env = Appose.pixi()
                      .conda("python>=3.10")
-                     .pypi("appose", "torch", "torchvision")
+                     .pypi("torch", "torchvision")
                      .name("pytorch-env")
                      .build();
 
@@ -772,7 +772,7 @@ Then, register the library with the service, and use it from tasks:
          # Build environment with your ML framework
          env = appose.pixi() \
              .conda("python>=3.10") \
-             .pypi("appose", "torch", "torchvision") \
+             .pypi("torch", "torchvision") \
              .name("pytorch-env") \
              .build()
 
