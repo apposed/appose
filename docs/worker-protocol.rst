@@ -535,6 +535,29 @@ Represents a shared memory block for zero-copy data sharing.
 * :code:`name`: Unique identifier for the shared memory segment (OS-level name)
 * :code:`rsize`: Requested/nominal size in bytes (as required by shared memory constructors)
 
+A shared memory reference may instead denote a *region* of the block, with
+these optional fields:
+
+* :code:`offset`: The region's starting position within the block, in bytes
+  (default: 0)
+* :code:`length`: The region's length in bytes (default: through the end of
+  the block, i.e. :code:`rsize - offset`)
+
+.. code-block:: json
+
+   {
+      "appose_type": "shm",
+      "name": "psm_4812f794",
+      "rsize": 268435456,
+      "offset": 6291456,
+      "length": 2097152
+   }
+
+Regions let one block hold many arrays, which conserves memory mappings
+(limited per process, e.g. by :code:`vm.max_map_count` on Linux) and
+page-rounding overhead. A receiver should map each block only once,
+sharing the mapping among all regions of it.
+
 NDArray
 ~~~~~~~
 
@@ -640,7 +663,8 @@ Decoding Rules
 When deserializing JSON:
 
 1. **Check for** :code:`appose_type` **key** in dictionary objects
-2. **If** :code:`"shm"`: Reconstruct a SharedMemory object from the name and size
+2. **If** :code:`"shm"`: Reconstruct a SharedMemory object from the name and size,
+   or a view of a region of it
 3. **If** :code:`"ndarray"`: Reconstruct an NDArray, recursively decoding the embedded SharedMemory
 4. **If** :code:`"worker_object"`: (Client-side only) Convert to a proxy object for remote method/attribute access
 5. **Otherwise**: Return the dictionary or value as-is
