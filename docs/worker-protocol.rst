@@ -31,6 +31,10 @@ unknown request type. The worker should report it on stderr; and if the
 request names a task the worker has not seen before, the worker should also
 send a ``FAILURE`` response for that task, since the service is waiting for it.
 
+The service shuts the worker down gracefully by closing the worker's stdin.
+The worker must then finish its pending tasks and exit. The service may
+also kill the worker at any time, along with its descendant processes.
+
 Version Compatibility
 ---------------------
 

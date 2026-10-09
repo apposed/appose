@@ -68,6 +68,9 @@ But Appose is compatible with any program that abides by the
    standard output (stdout) stream.
 3. The worker's first response must be HELLO, identifying the version of
    Appose it implements, which must match the service's major.minor version.
+4. When its standard input stream closes, the worker must finish its pending
+   tasks, then exit. (The service may also kill the worker at any time,
+   along with all its descendant processes.)
 
 ### Requests to worker from service
 

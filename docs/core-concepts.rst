@@ -271,6 +271,85 @@ Services should be properly closed when done to clean up resources:
              python.close();
          }
 
+Shutting Down
+^^^^^^^^^^^^^
+
+There are several ways to shut down a service's worker process:
+
+* **Close** the service to shut down gracefully: the worker finishes its
+  pending tasks, then exits. Closing returns immediately, without waiting.
+* **Close with a timeout** to shut down gracefully, but within bounded time:
+  if the worker has not exited when the timeout elapses, it is killed. This
+  waits for the worker to exit, returning its exit code.
+* **Kill** the service to shut down at once: pending tasks are interrupted,
+  reporting a ``CRASHED`` status. This kills the worker's whole process tree,
+  not only the process launched directly; e.g. ``pixi run`` launches the
+  actual worker process as its child.
+
+To wait until the worker process has exited and all its output has been
+reported, call ``wait_for`` (Python) or ``waitFor`` (Java), optionally with a
+timeout.
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         python.close()                          # Begin shutting down; do not wait
+         exit_code = python.close(timeout=5)     # Wait up to 5s, then kill
+         python.kill()                           # Shut down now
+         exit_code = python.wait_for(timeout=5)  # Raises subprocess.TimeoutExpired
+         exit_code = python.returncode           # None until the worker exits
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         python.close();                                    // Begin shutting down; do not wait
+         int exitCode = python.close(5, TimeUnit.SECONDS);  // Wait up to 5s, then kill
+         python.kill();                                     // Shut down now
+         exitCode = python.waitFor(5, TimeUnit.SECONDS);    // Throws TimeoutException
+         exitCode = python.exitValue();                     // Throws if the worker has not exited
+
+A service still running when your program exits is shut down automatically:
+it is closed, then killed if its worker has not exited within the service's
+**exit timeout**, 5 seconds by default. So your program can exit promptly
+even while a long task is running, without leaving the worker behind.
+
+.. tabs::
+
+   .. tab:: Python
+
+      .. code-block:: python
+
+         from appose.service import Service
+
+         python.exit_timeout = 30     # This service only
+         Service.exit_timeout = None  # All services: wait indefinitely
+
+      Appose shuts down services via an ``atexit`` hook. Hooks you register
+      after starting a service run first, while the service is still alive.
+
+   .. tab:: Java
+
+      .. code-block:: java
+
+         python.exitTimeout(30, TimeUnit.SECONDS);
+         python.exitTimeout(Long.MAX_VALUE, TimeUnit.SECONDS);  // Wait indefinitely
+
+      Appose shuts down services via a JVM shutdown hook. Shutdown hooks run
+      concurrently, so your own hooks may find a service already shutting
+      down.
+
+.. note::
+
+   On Java 8, killing a service kills only the process launched directly,
+   since enumerating its descendants requires Java 9 or later. Python
+   launches each worker in its own process group on POSIX systems; on
+   Windows, it relies on ``taskkill``, which misses any descendant whose
+   parent process has already exited.
+
 Creating Tasks
 ^^^^^^^^^^^^^^
 
