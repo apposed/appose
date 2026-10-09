@@ -965,6 +965,10 @@ Passing NDArrays to Workers
 
 ``NDArray`` objects can be placed directly in task inputs and outputs. Appose serializes only the **metadata** (name, dtype, shape) — not the array data itself. The worker reconstructs the NDArray by attaching to the same named shared memory block.
 
+.. tip::
+
+   An ``NDArray`` created as below is *unmanaged*: it lives until you dispose of it. Appose can also manage array lifetimes for you: a **managed** array (``NDArray(dtype, shape, managed=True)`` in Python, ``NDArray.managed(dType, shape)`` in Java) lives in the service's managed shared memory, may be sent to any number of processes, and is freed once none uses it anymore. Plain NumPy arrays are sent this way automatically. See :doc:`sharing-arrays` for when to use which.
+
 .. tabs::
 
    .. tab:: Python

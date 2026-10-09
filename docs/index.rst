@@ -66,6 +66,7 @@ The workflow for using Appose follows these steps:
 
    getting-started
    core-concepts
+   sharing-arrays
    examples
    python-environments
    capturing-output
@@ -77,6 +78,7 @@ The workflow for using Appose follows these steps:
 
    faq
    alternatives
+   design-shared-memory
 
 .. toctree::
    :maxdepth: 1

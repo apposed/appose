@@ -314,6 +314,35 @@ Indicates that a task failed to complete.
 
 **When to send:** When a task encounters an error or exception.
 
+RELEASE
+~~~~~~~
+
+Tell the service that the worker gives up its references to managed shared
+memory regions (see :ref:`shm-managed`). Unlike other responses, a
+``RELEASE`` response is not about any one task.
+
+**Structure:**
+
+.. code-block:: json
+
+   {
+      "responseType": "RELEASE",
+      "regions": [
+         {"name": "psm_4812f794", "offset": 0}
+      ]
+   }
+
+**Fields:**
+
+* ``responseType`` (string): Must be ``"RELEASE"``
+* ``regions`` (list): The released regions, each identified by the ``name``
+  of its shared memory block and its ``offset`` within that block. A region
+  listed more than once gives up that many references.
+
+**When to send:** Once the worker no longer uses a reference it received,
+e.g. when the last array built on it has been garbage collected; one entry
+per reference received.
+
 Task Context
 ------------
 
@@ -535,13 +564,15 @@ Represents a shared memory block for zero-copy data sharing.
 * :code:`name`: Unique identifier for the shared memory segment (OS-level name)
 * :code:`rsize`: Requested/nominal size in bytes (as required by shared memory constructors)
 
-A shared memory reference may instead denote a *region* of the block, with
-these optional fields:
+A shared memory reference may instead denote a *region* of the block, and
+may say that the region is managed, with these optional fields:
 
 * :code:`offset`: The region's starting position within the block, in bytes
   (default: 0)
 * :code:`length`: The region's length in bytes (default: through the end of
   the block, i.e. :code:`rsize - offset`)
+* :code:`managed`: Whether the region is managed by the service, which
+  counts the references to it; see :ref:`shm-managed` (default: false)
 
 .. code-block:: json
 
@@ -550,7 +581,8 @@ these optional fields:
       "name": "psm_4812f794",
       "rsize": 268435456,
       "offset": 6291456,
-      "length": 2097152
+      "length": 2097152,
+      "managed": true
    }
 
 Regions let one block hold many arrays, which conserves memory mappings
@@ -584,6 +616,57 @@ Represents a multi-dimensional array backed by shared memory, enabling efficient
 * :code:`dtype`: Data type of array elements (e.g., :code:`"float32"`, :code:`"int64"`)
 * :code:`shape`: Array dimensions as a list of integers (in C-order)
 * :code:`shm`: A SharedMemory object containing the actual data
+
+.. _shm-managed:
+
+Managed Shared Memory
+~~~~~~~~~~~~~~~~~~~~~
+
+The service owns all *managed* shared memory: it alone creates and unlinks
+its blocks, and it counts the references to each region, freeing the region
+once no process holds a reference to it anymore.
+
+* **The service** holds a region while any view of it exists in the service
+  process. Each time it sends a worker a managed region, that worker holds
+  one more reference to it.
+* **A worker** gives up each reference it received, once done with it, by
+  sending a ``RELEASE`` response. It never frees or unlinks managed memory.
+* **A worker sends a managed region** to the service (e.g. as a task output)
+  with :code:`"managed": true`. Such a reference names a region the service
+  owns, which the service resolves to a view of its own; no reference is
+  counted, and the worker keeps its own until its ``RELEASE``.
+* **A worker needs managed memory** (e.g. to send a NumPy array): it calls the
+  service's built-in function :code:`_appose_allocate` with the number of
+  bytes, and receives a managed region, holding one reference to it. The call
+  is a ``CALL`` response, which the service answers with a ``REPLY`` request:
+
+  .. code-block:: json
+
+     {"responseType": "CALL", "call": "<id>", "var": "_appose_allocate", "op": "call", "args": [4096]}
+     {"requestType": "REPLY", "call": "<id>", "result": {"appose_type": "shm", "name": "psm_4812f794", "rsize": 65536, "offset": 8192, "length": 4096, "managed": true}}
+* **A worker terminates:** the service drops all of its references, once it
+  has processed the worker's remaining output.
+
+A sender keeps the views of the managed regions a message refers to until
+the message is written, so that no ``RELEASE`` of them overtakes it.
+
+A reference without :code:`"managed": true` is unmanaged: the receiver never
+sends ``RELEASE`` for it, and its creator, which may be a worker, decides when
+it goes away (as with any :code:`NDArray` created explicitly).
+
+For why it works this way, and when to use which, with concrete scenarios,
+see :doc:`sharing-arrays` and :doc:`design-shared-memory`.
+
+**Compatibility:** The service announces its managed memory by launching the
+worker with the environment variable :code:`APPOSE_SHM` set to the name of
+its memory backend: :code:`builtin` for the scheme described here. A worker
+that lacks it, or does not know that backend, sends no managed regions.
+
+**Memory backends:** What a managed reference consists of, and what sending
+or receiving one entails, is up to the memory backend. The builtin backend
+works as described above; another backend (e.g. one built on an external
+shared memory daemon) may use other fields, but references always carry
+:code:`"appose_type": "shm"` and :code:`"managed": true`.
 
 WorkerObject (Remote Object Proxies)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -664,7 +747,7 @@ When deserializing JSON:
 
 1. **Check for** :code:`appose_type` **key** in dictionary objects
 2. **If** :code:`"shm"`: Reconstruct a SharedMemory object from the name and size,
-   or a view of a region of it
+   or a view of a region of it; if the region is managed, release it once done
 3. **If** :code:`"ndarray"`: Reconstruct an NDArray, recursively decoding the embedded SharedMemory
 4. **If** :code:`"worker_object"`: (Client-side only) Convert to a proxy object for remote method/attribute access
 5. **Otherwise**: Return the dictionary or value as-is
