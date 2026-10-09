@@ -305,6 +305,8 @@ There are several ways to shut down a service's worker process:
 
 * **Close** the service to shut down gracefully: the worker finishes its
   pending tasks, then exits. Closing returns immediately, without waiting.
+  The tasks already started can still call into service objects until they
+  finish, but no new task can start.
 * **Close with a timeout** to shut down gracefully, but within bounded time:
   if the worker has not exited when the timeout elapses, it is killed. This
   waits for the worker to exit, returning its exit code.
