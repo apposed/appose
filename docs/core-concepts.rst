@@ -849,6 +849,9 @@ NDArray
          dtype = data.dtype    # "float32"
          shape = data.shape    # [7, 512, 512]
 
+         # Or copy an existing NumPy array into new shared memory
+         data = appose.NDArray.copy_of(arr)
+
    .. tab:: Java
 
       .. code-block:: java
@@ -939,6 +942,8 @@ For convenience, the NumPy-style short forms are also accepted when creating an 
 
 Array data is always in the machine's **native byte order**, since shared memory is only ever shared between processes on the same machine. For this reason, dtype strings with an explicit byte order (``<`` or ``>``, e.g. ``"<u2"``) are rejected, so that dtype parsing behaves the same on every machine. Platform-dependent types (e.g. ``longdouble``, or single-character codes like ``"l"``) are likewise not supported.
 
+When creating an NDArray to match an existing NumPy array, prefer ``NDArray.copy_of(arr)``, which allocates the shared memory and copies the data in one step. If you need to derive the dtype yourself, use ``arr.dtype.name`` rather than ``str(arr.dtype)``: the latter yields a string like ``">u2"`` for arrays not in native byte order, such as big-endian images from some file readers. Either way, copy the data by assignment (``np.asarray(data)[:] = arr``, which is what ``copy_of`` does), so that NumPy converts values to native byte order; copying raw bytes (e.g. from ``arr.tobytes()``) would bypass that conversion.
+
 Shape and Axis Order
 """"""""""""""""""""
 
@@ -965,15 +970,19 @@ Passing NDArrays to Workers
       .. code-block:: python
 
          import appose
+         import numpy as np
 
          env = appose.system()
          with env.python() as service:
              # Create array in host process and fill with data
              data = appose.NDArray("float32", [512, 512])
-             data.ndarray()[:] = 1.0
+             np.asarray(data)[:] = 1.0
 
-             # Worker receives it as an appose.NDArray and calls .ndarray()
-             script = "task.outputs['total'] = float(data.ndarray().sum())"
+             # Worker receives it as an appose.NDArray and wraps it with NumPy
+             script = """
+         import numpy as np
+         task.outputs['total'] = float(np.asarray(data).sum())
+         """
              task = service.task(script, {"data": data})
              task.wait_for()
              print(task.outputs["total"])  # 262144.0
@@ -997,8 +1006,9 @@ Passing NDArrays to Workers
              FloatBuffer buf = data.buffer().asFloatBuffer();
              for (int i = 0; i < 512 * 512; i++) buf.put(i, 1.0f);
 
-             // Worker receives it as an appose.NDArray and calls .ndarray()
-             String script = "task.outputs['total'] = float(data.ndarray().sum())";
+             // Worker receives it as an appose.NDArray and wraps it with NumPy
+             String script = "import numpy as np\n" +
+                 "task.outputs['total'] = float(np.asarray(data).sum())";
              Map<String, Object> inputs = new HashMap<>();
              inputs.put("data", data);
              Task task = service.task(script, inputs);
@@ -1009,7 +1019,7 @@ Passing NDArrays to Workers
 NumPy Integration (Python)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In Python, call ``ndarray()`` on an ``NDArray`` to get a **zero-copy NumPy array** backed by the shared memory:
+In Python, pass an ``NDArray`` to ``np.asarray`` to get a **zero-copy NumPy array** backed by the shared memory:
 
 .. code-block:: python
 
@@ -1017,13 +1027,19 @@ In Python, call ``ndarray()`` on an ``NDArray`` to get a **zero-copy NumPy array
    import numpy as np
 
    data = appose.NDArray("float32", [7, 512, 512])
-   arr = data.ndarray()  # numpy.ndarray, shape (7, 512, 512), dtype float32
+   arr = np.asarray(data)  # numpy.ndarray, shape (7, 512, 512), dtype float32
 
    # Any numpy operation reads and writes shared memory directly — no copying
    arr[0] = np.zeros((512, 512))
    mean = arr.mean()
 
-This works identically in worker scripts — the worker receives the ``NDArray``, calls ``.ndarray()``, and gets a zero-copy NumPy view of the same shared memory.
+This works identically in worker scripts — the worker receives the ``NDArray``, calls ``np.asarray(data)``, and gets a zero-copy NumPy view of the same shared memory.
+
+Going the other way, ``NDArray.copy_of(arr)`` copies an existing NumPy array into new shared memory, analogous to ``ShmImg.copyOf`` in ImgLib2 (see below).
+
+.. note::
+
+   Older versions of Appose used ``data.ndarray()`` to obtain the NumPy view. It still works, but is deprecated in favor of ``np.asarray(data)``.
 
 ImgLib2 Integration (Java)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1096,7 +1112,7 @@ Use context managers (Python) or try-with-resources (Java) for reliable cleanup:
 
          # NDArray context manager disposes the underlying SharedMemory
          with appose.NDArray("float32", [512, 512]) as data:
-             arr = data.ndarray()
+             arr = np.asarray(data)
              # ... work with arr ...
          # shared memory released here
 
