@@ -142,6 +142,10 @@ def expand_signature(line: str) -> List[str]:
     # Parse each parameter
     parsed_params = []
     for param_str in params:
+        # Skip the bare '*' (keyword-only) and '/' (positional-only) markers;
+        # they are not parameters, and Java has no equivalent.
+        if param_str in ('*', '/'):
+            continue
         name, type_str, has_default, is_varargs = parse_parameter(param_str)
         parsed_params.append((name, type_str, has_default, is_varargs))
 
@@ -199,7 +203,7 @@ def expand_signature(line: str) -> List[str]:
             if name == 'self':
                 param_strs.append('self')
             elif is_varargs:
-                param_strs.append(f'*{name}: {type_str}')
+                param_strs.append(f'*{name}: {type_str}' if type_str else f'*{name}')
             elif type_str:
                 param_strs.append(f'{name}: {type_str}')
             else:
@@ -427,12 +431,18 @@ def process_file(file_path: Path):
         expanded = expand_signature(processed)
         output_lines.extend(expanded)
 
-    # Deduplicate across all lines (handles cases where Java overloads map to same Python signature)
+    # Deduplicate lines within each scope (handles cases where Java overloads
+    # map to the same Python signature). Identical members of different
+    # classes (e.g. two __str__ methods) are not duplicates.
     seen = set()
     unique_lines = []
+    scope = None
     for line in output_lines:
-        if line not in seen:
-            seen.add(line)
+        if line and not line[0].isspace():
+            scope = line if line.startswith('class ') else None
+        key = (scope, line) if line[:1].isspace() else (None, line)
+        if key not in seen:
+            seen.add(key)
             unique_lines.append(line)
 
     with open(file_path, 'w') as f:
